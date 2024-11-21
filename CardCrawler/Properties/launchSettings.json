@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CardCrawler": {
+      "commandName": "Project",
+      "commandLineArgs": "Deck.txt Prices.txt"
+    }
+  }
+}
