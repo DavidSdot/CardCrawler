@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CardCrawler", "CardCrawler\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CardCrawler.Cardmarket", "CardCrawler.Cardmarket\CardCrawler.Cardmarket.csproj", "{6BC8CE7E-5F15-4964-B925-2BC8BAB09F6C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CardCrawler.Browser", "CardCrawler.Browser\CardCrawler.Browser.csproj", "{AAE1954F-28E6-4F5A-A2DE-C716EE8D1EAB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{6BC8CE7E-5F15-4964-B925-2BC8BAB09F6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6BC8CE7E-5F15-4964-B925-2BC8BAB09F6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6BC8CE7E-5F15-4964-B925-2BC8BAB09F6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AAE1954F-28E6-4F5A-A2DE-C716EE8D1EAB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAE1954F-28E6-4F5A-A2DE-C716EE8D1EAB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAE1954F-28E6-4F5A-A2DE-C716EE8D1EAB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAE1954F-28E6-4F5A-A2DE-C716EE8D1EAB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
