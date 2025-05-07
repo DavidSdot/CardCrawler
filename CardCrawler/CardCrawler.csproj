@@ -4,17 +4,13 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net9.0-windows</TargetFramework>
     <Nullable>enable</Nullable>
-    <PublishAot>true</PublishAot>
+    <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
   </PropertyGroup>
 
   <PropertyGroup>
-    <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>link</TrimMode>
-    <OptimizationPreference>Size</OptimizationPreference>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <JsonSerializerIsReflectionEnabledByDefault>false</JsonSerializerIsReflectionEnabledByDefault>
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
+    <PublishTrimmed>True</PublishTrimmed>
+    <PublishAot>False</PublishAot>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -30,6 +26,15 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Deck - Copy %282%29.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="exclude.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Deck - Copy.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="Deck.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
