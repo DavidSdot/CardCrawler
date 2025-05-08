@@ -26,11 +26,10 @@ namespace CardCrawler.Browser
         /// Fetches the HTML content of a given URL.
         /// </summary>
         /// <param name="url"></param>
+        /// <param name="retries"></param>
         /// <returns></returns>
-        public static async Task<string?> GetPageContent(string url)
+        public static async Task<string?> GetPageContent(string url, int retries = 0)
         {
-
-            Debug.WriteLine($"Loading {url}…");
 
             using IBrowser browser = await Puppeteer.LaunchAsync(launchOptions);
             using IPage page = await browser.NewPageAsync();
@@ -45,9 +44,19 @@ namespace CardCrawler.Browser
                 "Chrome/116.0.0.0 Safari/537.36 Edg/116.0.0.0"
             );
 
-            IResponse response = await page.GoToAsync(url, WaitUntilNavigation.Networkidle2);
+            IResponse response = await page.GoToAsync(url, timeout: 0, waitUntil: [WaitUntilNavigation.Networkidle0]);
 
-            Debug.WriteLine(response.Status);
+            Debug.WriteLine($"GetPageContent: {response.Status}");
+
+            if ((int)response.Status == 429)
+            {
+                if (retries > 5)
+                {
+                    return null;
+                }
+                await Task.Delay(15000);
+                return await GetPageContent(url, retries++);
+            }
 
             return await page.GetContentAsync();
         }

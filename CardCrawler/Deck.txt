@@ -1,1 +1,90 @@
-1 Clavileño, First of the Blessed
+1 Xavier Sal, Infested Captain (LCC) 14
+1 Agent Frank Horrigan (PIP) 89
+1 Anoint with Affliction (ONE) 81
+1 Basking Broodscale (MH3) 145
+1 Bilious Skulldweller (ONE) 83
+1 Binding the Old Gods (DSC) 213
+1 Blight Mamba (PLST) SOM-112
+1 Blightbelly Rat (ONE) 289
+1 Blighted Agent (NPH) 29
+1 Bloated Contaminator (ONE) 159
+1 Bloodroot Apothecary (BLC) 27
+1 Bojuka Bog (TDC) 341
+1 Bring the Ending (ONE) 44
+1 Cankerbloom (ONE) 294
+1 Command Tower (TDC) 107
+1 Corrupted Conscience (MBS) 22
+1 Corrupted Resolve (NPH) 32
+1 Counterspell (CMM) 630
+1 Cultivate (TDC) 253
+1 Darkwater Catacombs (TDC) 355
+1 Dimir Aqueduct (DSC) 270
+1 Dimir Signet (CLU) 221
+1 Dreamroot Cascade (TDC) 358
+1 Evolution Sage (LCC) 240
+1 Evolution Witness (MH3) 151
+1 Experimental Augury (ONE) 49
+1 Ezuri, Stalker of Spheres (ONE) 317
+1 Flooded Grove (TDC) 364
+1 Foreboding Landscape (TDC) 365
+5 Forest (LCI) 402
+1 Golgari Rot Farm (TDC) 368
+1 Golgari Signet (DSC) 246
+1 Hand of the Praetors (SOM) 66
+1 Hinterland Harbor (TDC) 371
+1 Ichor Rats (SOM) 67
+1 Infectious Bite (ONE) 172
+1 Infectious Inquiry (ONE) 97
+1 Intruder Alarm (8ED) 86
+4 Island (TDM) 279
+1 Kiora's Follower (LCC) 273
+1 Llanowar Elves (DOM) 168
+1 Llanowar Wastes (TDC) 376
+1 Mimic Vat (NCC) 372
+1 Necrogen Communion (ONE) 99
+1 Negate (FDN) 710 *F*
+1 Noxious Assault (ONE) 176
+1 Opulent Palace (TDM) 264
+1 Path of Ancestry (TDC) 382
+1 Pestilent Syphoner (ONE) 103
+1 Phyresis (MBS) 49
+1 Phyresis Outbreak (ONC) 50
+1 Plague Stinger (SOM) 75
+1 Poison Dart Frog (LCI) 207
+1 Prologue to Phyresis (ONE) 65
+1 Reject Imperfection (ONE) 67
+1 Revitalizing Repast // Old-Growth Grove (MH3) 256
+1 Roalesk, Apex Hybrid (NCC) 349
+1 Rogue's Passage (FDN) 264
+1 Sakura-Tribe Elder (TDC) 266
+1 Serum Snare (ONE) 68
+1 Simic Growth Chamber (DSC) 298
+1 Simic Signet (DSC) 252
+1 Sol Ring (TDC) 106
+1 Staff of Compleation (TDC) 326
+1 Sunken Hollow (TDC) 398
+4 Swamp (TDM) 281
+1 Tainted Observer (ONE) 217
+1 Tainted Wood (DSC) 305
+1 Talisman of Curiosity (MKC) 241
+1 Talisman of Dominance (MKC) 242
+1 Talisman of Resilience (DSC) 255
+1 Temple of Deceit (FDN) 697
+1 Temple of Malady (TDC) 403
+1 Temple of Mystery (TDC) 404
+1 Terramorphic Expanse (TDC) 408
+1 Tezzeret's Gambit (M3C) 194
+1 Thrummingbird (ONE) 288
+1 Tyrranax Rex (ONE) 189
+1 Tyvar, Jubilant Brawler (ONE) 218
+1 Unnatural Restoration (ONE) 191
+1 Urborg Elf (APC) 90
+1 Venerated Rotpriest (PONE) 192p
+1 Venser, Corpse Puppet (ONE) 219
+1 Viridescent Bog (DSC) 324
+1 Viridian Corrupter (ONC) 113
+1 Voidwing Hybrid (ONE) 221
+1 Vraska's Fall (ONE) 116
+1 Whispersilk Cloak (DSC) 257
+1 Woodland Cemetery (TDC) 412
+1 Yavimaya Coast (TDC) 413

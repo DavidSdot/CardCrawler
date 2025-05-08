@@ -33,9 +33,9 @@ namespace CardCrawler
         private static bool excludeBasics;
         private static decimal budgetLimit = 20.00M;
 
-        private static readonly HashSet<string> BasicLands = new(StringComparer.InvariantCultureIgnoreCase)
+        private static readonly List<string> BasicLands = new()
             { "Forest","Island","Mountain","Plains","Swamp" };
-        private static readonly HashSet<string> ExcludedCards = new(StringComparer.InvariantCultureIgnoreCase);
+        private static readonly List<string> ExcludedCards = new();
 
         private class StatusEntry(string name)
         {
@@ -110,12 +110,9 @@ namespace CardCrawler
 
             if (!string.IsNullOrWhiteSpace(excludeFile) && File.Exists(excludeFile))
             {
-                foreach (string name in File.ReadLines(excludeFile!))
+                foreach (string name in File.ReadLines(excludeFile).Where(l => !string.IsNullOrWhiteSpace(l)))
                 {
-                    if (!string.IsNullOrWhiteSpace(name))
-                    {
-                        _ = ExcludedCards.Add(Utilities.CleanCardName(name.Trim()));
-                    }
+                    ExcludedCards.Add(Utilities.CleanCardName(name));
                 }
             }
 
@@ -134,7 +131,16 @@ namespace CardCrawler
                 await Task.Delay(2000);
                 Console.Write("Checking Cardmarket... ");
             }
-            Console.WriteLine("OK\n");
+            Console.WriteLine("OK\r\n");
+            if (excludeBasics)
+            {
+                Console.WriteLine("Excluding basic lands from total calculation");
+            }
+            if (ExcludedCards.Count > 0)
+            {
+                Console.WriteLine($"Excluding {ExcludedCards.Count} cards from {excludeFile}");
+            }
+            Console.WriteLine();
 
             List<StatusEntry> statusList = [.. lines.Select(n => new StatusEntry(n))];
             decimal total = 0M;
@@ -160,9 +166,9 @@ namespace CardCrawler
                 Console.Write($"> Processing {i + 1}/{lines.Count} {bar} ({pct}%) | Total: {total:0.00}€ | Left: {budgetLimit - total:0.00}€".PadRight(Console.WindowWidth));
 
                 Console.SetCursorPosition(0, statusLine);
-                Console.Write($"↪ Fetching: {original}".PadRight(Console.WindowWidth));
+                Console.Write($"↪ Fetching: {cleanName}".PadRight(Console.WindowWidth));
 
-                CardData? card = await reader.GetCardData(original);
+                CardData? card = await reader.GetCardData(cleanName);
 
                 bool isBasic = BasicLands.Contains(cleanName);
                 bool isExcluded = ExcludedCards.Contains(cleanName);
@@ -171,6 +177,7 @@ namespace CardCrawler
                 string sym, info, price;
                 if (card is not null)
                 {
+                    statusList[i] = new(card.Name);
                     sym = include ? "✓" : "~";
                     price = $"{card.PriceTrend:0.00}€";
                     info = include ? "included" : "excluded";
@@ -183,7 +190,8 @@ namespace CardCrawler
                 {
                     sym = "X";
                     price = "-.--€";
-                    info = "Not found";
+                    info = "included";
+                    info = "notfound";
                 }
                 statusList[i].Symbol = sym;
                 statusList[i].Price = price;
@@ -209,8 +217,10 @@ namespace CardCrawler
 
         private static void DrawTable(List<StatusEntry> list, decimal budget, decimal total)
         {
-            const int nameW = 40, priceW = 7, infoW = 12;
-            Console.WriteLine($" ST | {"Name",-nameW} | {"Price",priceW} | {"Info",-infoW}");
+            int nameW = list.Max(l => l.Name.Length);
+            int priceW = list.Max(l => l.Price.ToString().Length);
+            int infoW = 12;
+            Console.WriteLine($" ST | {"Name".PadRight(nameW)} | {"Price".PadLeft(priceW)} | {"Info".PadRight(infoW)}");
             Console.WriteLine(new string('-', 3 + 2 + nameW + 3 + priceW + 3 + infoW));
             foreach (StatusEntry e in list)
             {
@@ -228,19 +238,19 @@ namespace CardCrawler
                 Console.WriteLine();
             }
             Console.WriteLine(new string('-', 3 + 2 + nameW + 3 + priceW + 3 + infoW));
-            Console.WriteLine($"{"",nameW + 2}  Total: {total:0.00}€ | Budget: {budget - total:0.00}€");
+            Console.WriteLine($"{"     ".PadRight(nameW)}  Total: {total:0.00}€ | Budget: {budget - total:0.00}€");
         }
 
         private static async Task SaveCsvAsync(List<StatusEntry> list, decimal total)
         {
             StringBuilder sb = new();
-            _ = sb.AppendLine("Symbol;Name;Price;Info");
+            _ = sb.AppendLine("Symbol;Price;Info;Name");
             foreach (StatusEntry e in list)
             {
-                _ = sb.AppendLine($"{e.Symbol};\"{e.Name.Replace("\"", "\"\"")}\";{e.Price};{e.Info}");
+                _ = sb.AppendLine($"{e.Symbol};{e.Price};{e.Info};{e.Name.Replace("\"", "\"\"")}");
             }
 
-            _ = sb.AppendLine($"TOTAL;;{total:0.00}€;");
+            _ = sb.AppendLine($"TOTAL;{total:0.00}€;{(total > budgetLimit ? "FAILED" : "PASSED")};");
             await File.WriteAllTextAsync(outputPath!, sb.ToString());
         }
 

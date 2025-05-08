@@ -57,35 +57,26 @@ namespace CardCrawler.Cardmarket
 
         public async Task<CardData?> GetCardData(string cardName)
         {
-
-            cardName = Utilities.CleanCardName(cardName);
-
-            Log($"Searching...{cardName}");
-
             CardData card = new(cardName);
-            CardData? result = null;
-            string url = $"{CardUrl}{card.UrlName}?{string.Join("&", Parameters)}";
+            string urlName = Utilities.UrlEncodeCardName(card.Name);
+            Log($"Search by URL...{urlName}");
+            string url = $"{CardUrl}{urlName}?{string.Join("&", Parameters)}";
 
             string? html = await Edge.GetPageContent(url);
-            if (!string.IsNullOrWhiteSpace(html))
+            if (!string.IsNullOrWhiteSpace(html) && ParseCardPage(html, card) is CardData foundCard)
             {
-                result = ParseCardPage(html, card);
-                if (result != null)
-                {
-                    return result;
-                }
+                return foundCard;
             }
 
-            Log($"Searching...{card.Name}");
-            result = await SearchByCardNameAsync(cardName);
-            if (result != null)
+            Log($"Search by Name...{card.Name}");
+            if (await SearchByCardNameAsync(cardName) is CardData namedCard)
             {
-                Log($"Changed to: {result.UrlName}...");
-                url = $"{CardUrl}{result.UrlName}?{string.Join("&", Parameters)}";
+                Log($"Changed to: {namedCard.UrlName}...");
+                url = $"{CardUrl}{namedCard.UrlName}?{string.Join("&", Parameters)}";
                 html = await Edge.GetPageContent(url);
                 if (html != null)
                 {
-                    return ParseCardPage(html, result);
+                    return ParseCardPage(html, namedCard);
                 }
             }
 
@@ -131,7 +122,10 @@ namespace CardCrawler.Cardmarket
                 return null;
             }
 
-            card.Name = titleNode.InnerText.Trim();
+            if (card.Name != titleNode.InnerText.Trim())
+            {
+                card = new(titleNode.InnerText.Trim());
+            }
 
             Debug.WriteLine($"Card: {card.Name}");
 
