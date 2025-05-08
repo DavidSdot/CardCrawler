@@ -1,14 +1,16 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Web;
 
 namespace CardCrawler.Cardmarket
 {
     public class CardData(string name)
     {
-        public string Name { get; set; } = name;
-        public string UrlName { get; set; } = Utilities.UrlEncodeCardName(Utilities.CleanCardName(name));
+        public string Name { get; } = name;
+
+        public string UrlName { get; set; } = string.Empty;
 
         public string ImageUrl { get; set; } = string.Empty;
         public Stream ImageStream { get; set; } = null;

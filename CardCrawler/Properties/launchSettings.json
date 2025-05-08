@@ -2,7 +2,7 @@
   "profiles": {
     "CardCrawler": {
       "commandName": "Project",
-      "commandLineArgs": "Deck.txt Prices.txt --no-basics --budget=2.5 --exclude=exclude.txt"
+      "commandLineArgs": "Deck.txt Prices.txt --no-basics --budget=25 --exclude=exclude.txt"
     }
   }
 }
