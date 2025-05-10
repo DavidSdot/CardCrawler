@@ -31,6 +31,7 @@ namespace CardCrawler
         private static string? outputPath;
         private static string? excludeFile;
         private static bool excludeBasics;
+        private static bool excludeFirst;
         private static decimal budgetLimit = 20.00M;
 
         private static readonly List<string> BasicLands = new()
@@ -58,28 +59,33 @@ namespace CardCrawler
 
             Console.WriteLine();
 
-            List<string> unnamed = [];
+            var unnamed = new List<string>();
             bool showHelp = false;
+
             foreach (string arg in args)
             {
-                if (arg.StartsWith("--exclude="))
+                if (arg.StartsWith("--exclude=", StringComparison.Ordinal))
                 {
-                    excludeFile = arg["--exclude=".Length..];
+                    excludeFile = arg.Substring("--exclude=".Length);
                 }
-                else if (arg == "--no-basics")
+                else if (arg.Equals("--excludeFirst", StringComparison.Ordinal))
+                {
+                    excludeFirst = true;
+                }
+                else if (arg.Equals("--no-basics", StringComparison.Ordinal))
                 {
                     excludeBasics = true;
                 }
-                else if (arg.StartsWith("--budget=") &&
-                         decimal.TryParse(arg["--budget=".Length..], NumberStyles.Any, CultureInfo.InvariantCulture, out decimal b))
+                else if (arg.StartsWith("--budget=", StringComparison.Ordinal) &&
+                         decimal.TryParse(arg.AsSpan("--budget=".Length), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal b))
                 {
                     budgetLimit = b;
                 }
-                else if (arg == "--help" || arg == "-h")
+                else if (arg.Equals("--help", StringComparison.Ordinal) || arg.Equals("-h", StringComparison.Ordinal))
                 {
                     showHelp = true;
                 }
-                else if (arg.StartsWith("--"))
+                else if (arg.StartsWith("--", StringComparison.Ordinal))
                 {
                     Console.WriteLine($"Unknown option: {arg}");
                     return;
@@ -90,16 +96,14 @@ namespace CardCrawler
                 }
             }
 
-            if (unnamed.Count < 1 || showHelp)
+            if (unnamed.Count == 0 || showHelp)
             {
                 PrintUsage();
                 return;
             }
+
             inputPath = unnamed[0];
-            if (unnamed.Count > 1)
-            {
-                outputPath = unnamed[1];
-            }
+            outputPath = unnamed.Count > 1 ? unnamed[1] : null;
 
             List<string> lines = [.. File.ReadLines(inputPath!).Where(l => !string.IsNullOrWhiteSpace(l))];
             if (lines.Count == 0)
@@ -132,15 +136,19 @@ namespace CardCrawler
                 Console.Write("Checking Cardmarket... ");
             }
             Console.WriteLine("OK\r\n");
+            if (excludeFirst)
+            {
+                Console.WriteLine("Excluding first card from total");
+            }
             if (excludeBasics)
             {
-                Console.WriteLine("Excluding basic lands from total calculation");
+                Console.WriteLine("Excluding basic lands from total");
             }
             if (ExcludedCards.Count > 0)
             {
-                Console.WriteLine($"Excluding {ExcludedCards.Count} cards from {excludeFile}");
+                Console.WriteLine($"Excluding {ExcludedCards.Count} cards from total");
             }
-            Console.WriteLine();
+            Console.WriteLine("\r\n");
 
             List<StatusEntry> statusList = [.. lines.Select(n => new StatusEntry(n))];
             decimal total = 0M;
@@ -173,6 +181,11 @@ namespace CardCrawler
                 bool isBasic = BasicLands.Contains(cleanName);
                 bool isExcluded = ExcludedCards.Contains(cleanName);
                 bool include = !((excludeBasics && isBasic) || isExcluded);
+
+                if (i == 0 && excludeFirst)
+                {
+                    include = false;
+                }
 
                 string sym, info, price;
                 if (card is not null)
@@ -269,6 +282,7 @@ namespace CardCrawler
             Console.WriteLine("  [output-file]          (Optional) Path to save results as CSV.");
             Console.WriteLine();
             Console.WriteLine("Options:");
+            Console.WriteLine("  --excludeFirst         Exclude the first card from from total (eg. your commander).");
             Console.WriteLine("  --exclude=<file>       Path to a text file with card names to exclude");
             Console.WriteLine("                         (one name per line). These cards will be skipped");
             Console.WriteLine("                         in the total calculation.");

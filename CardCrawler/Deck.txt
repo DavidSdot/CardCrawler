@@ -1,90 +1,104 @@
-1 Xavier Sal, Infested Captain (LCC) 14
-1 Agent Frank Horrigan (PIP) 89
-1 Anoint with Affliction (ONE) 81
-1 Basking Broodscale (MH3) 145
-1 Bilious Skulldweller (ONE) 83
-1 Binding the Old Gods (DSC) 213
-1 Blight Mamba (PLST) SOM-112
-1 Blightbelly Rat (ONE) 289
-1 Blighted Agent (NPH) 29
-1 Bloated Contaminator (ONE) 159
-1 Bloodroot Apothecary (BLC) 27
-1 Bojuka Bog (TDC) 341
-1 Bring the Ending (ONE) 44
-1 Cankerbloom (ONE) 294
-1 Command Tower (TDC) 107
-1 Corrupted Conscience (MBS) 22
-1 Corrupted Resolve (NPH) 32
-1 Counterspell (CMM) 630
-1 Cultivate (TDC) 253
-1 Darkwater Catacombs (TDC) 355
-1 Dimir Aqueduct (DSC) 270
-1 Dimir Signet (CLU) 221
-1 Dreamroot Cascade (TDC) 358
-1 Evolution Sage (LCC) 240
-1 Evolution Witness (MH3) 151
-1 Experimental Augury (ONE) 49
-1 Ezuri, Stalker of Spheres (ONE) 317
-1 Flooded Grove (TDC) 364
-1 Foreboding Landscape (TDC) 365
-5 Forest (LCI) 402
-1 Golgari Rot Farm (TDC) 368
-1 Golgari Signet (DSC) 246
-1 Hand of the Praetors (SOM) 66
-1 Hinterland Harbor (TDC) 371
-1 Ichor Rats (SOM) 67
-1 Infectious Bite (ONE) 172
-1 Infectious Inquiry (ONE) 97
-1 Intruder Alarm (8ED) 86
-4 Island (TDM) 279
-1 Kiora's Follower (LCC) 273
-1 Llanowar Elves (DOM) 168
-1 Llanowar Wastes (TDC) 376
-1 Mimic Vat (NCC) 372
-1 Necrogen Communion (ONE) 99
-1 Negate (FDN) 710 *F*
-1 Noxious Assault (ONE) 176
-1 Opulent Palace (TDM) 264
-1 Path of Ancestry (TDC) 382
-1 Pestilent Syphoner (ONE) 103
-1 Phyresis (MBS) 49
-1 Phyresis Outbreak (ONC) 50
-1 Plague Stinger (SOM) 75
-1 Poison Dart Frog (LCI) 207
-1 Prologue to Phyresis (ONE) 65
-1 Reject Imperfection (ONE) 67
-1 Revitalizing Repast // Old-Growth Grove (MH3) 256
-1 Roalesk, Apex Hybrid (NCC) 349
-1 Rogue's Passage (FDN) 264
+﻿1 Ghired, Mirror of the Wilds (OTJ) 205
+1 Abraded Bluffs (OTJ) 251
+1 Advent of the Wurm (MM3) 147
+1 Arcane Signet (TDC) 105
+1 Austere Command (LCC) 126
+1 Avacyn's Pilgrim (ISD) 170
+1 Baylen, the Haymaker (BLB) 205
+1 Beast Whisperer (PGRN) 123★ *F*
+1 Beast Within (TDC) 249
+1 Blade of Selves (TDC) 313
+1 Blossoming Sands (TDM) 251
+1 Boros Guildgate (GRN) 243
+1 Boros Signet (TDC) 314
+1 Bovine Intervention (OTJ) 6
+1 Bramble Sovereign (CLB) 218
+1 Bristling Backwoods (OTJ) 253
+1 Cabaretti Confluence (NCC) 69
+1 Cadira, Caller of the Small (CLB) 417
+1 Cadric, Soul Kindler (DMC) 86
+1 Calamity, Galloping Inferno (OTJ) 116
+1 Chaos Warp (DSC) 162
+1 Command Tower (CLB) 351
+1 Creosote Heath (OTJ) 255
+1 Cultivate (DSC) 174
+1 Decanter of Endless Water (CLB) 444
+1 Dragonmaster Outcast (TDC) 211
+1 Druid's Deliverance (MM3) 124
+1 Duke Ulder Ravengard (CLB) 420
+1 Elvish Mystic (CMM) 284
+1 Emmara, Soul of the Accord (GRN) 168
+1 Ertha Jo, Frontier Mentor (OTJ) 203
+1 Etali, Primal Storm (MKC) 152
+1 Exotic Orchard (DSC) 275
+1 Farseek (TDC) 255
+1 Feldon of the Third Path (PLST) C21-169
+1 Fellwar Stone (TDC) 318
+1 Flamerush Rider (MOC) 279
+1 Fortress Kin-Guard (TDM) 12
+1 Gala Greeters (SNC) 450 *F*
+1 Garruk, Primal Hunter (M13) 174
+1 Garruk's Uprising (SCD) 185
+1 Generous Gift (PLST) MH1-11
+1 Ghalta and Mavren (MOM) 386 *F*
+1 Ghired, Conclave Exile (PLST) C19-42
+1 Giant Adephage (DSC) 179
+1 Growing Ranks (C19) 193
+1 Gruff Triplets (WOE) 172
+1 Gruul Guildgate (CLU) 237
+1 Gruul Signet (BLC) 273
+1 Hammer of Purphoros (THS) 124
+1 Harmonize (DSC) 182
+1 Hate Mirage (SCD) 146
+1 Idol of Oblivion (TDC) 319
+1 Intangible Virtue (PIP) 163
+1 Ironwill Forger (TDC) 13
+1 Jaxis, the Troublemaker (PSNC) 112p
+1 Jungle Shrine (MKC) 268
+1 Lightning Greaves (TDC) 102
+1 Llanowar Elves (FDN) 227
+1 Mimic Vat (C18) 209
+1 Neyali, Suns' Vanguard (ONC) 30 *E*
+1 Orthion, Hero of Lavabrink (MOM) 334
+1 Path to Exile (ACR) 81
+1 Radiant Grove (TDC) 385
+1 Rampaging Baloths (FDN) 645
+1 Rampant Growth (7ED) 262
+1 Reliquary Tower (TDC) 386
+1 Return of the Wildspeaker (C21) 205
+1 Riling Dawnbreaker // Signaling Roar (TDM) 21
+1 Rite of Harmony (MID) 236
+1 Rogue's Passage (MKC) 284
+1 Rootborn Defenses (RTR) 19
+1 Roxanne, Starfall Savant (OTJ) 228
+1 Rugged Highlands (TDM) 265
+1 Rustvale Bridge (MH2) 253
+1 Sacred Peaks (MKC) 285
+1 Sage of the Skies (TDM) 22
 1 Sakura-Tribe Elder (TDC) 266
-1 Serum Snare (ONE) 68
-1 Simic Growth Chamber (DSC) 298
-1 Simic Signet (DSC) 252
+1 Second Harvest (INR) 417
+1 Selesnya Guildgate (GRN) 256
+1 Selesnya Signet (TDC) 324
+1 Shamanic Revelation (SCD) 211
+1 Slagwoods Bridge (DRC) 171
 1 Sol Ring (TDC) 106
-1 Staff of Compleation (TDC) 326
-1 Sunken Hollow (TDC) 398
-4 Swamp (TDM) 281
-1 Tainted Observer (ONE) 217
-1 Tainted Wood (DSC) 305
-1 Talisman of Curiosity (MKC) 241
-1 Talisman of Dominance (MKC) 242
-1 Talisman of Resilience (DSC) 255
-1 Temple of Deceit (FDN) 697
-1 Temple of Malady (TDC) 403
-1 Temple of Mystery (TDC) 404
-1 Terramorphic Expanse (TDC) 408
-1 Tezzeret's Gambit (M3C) 194
-1 Thrummingbird (ONE) 288
-1 Tyrranax Rex (ONE) 189
-1 Tyvar, Jubilant Brawler (ONE) 218
-1 Unnatural Restoration (ONE) 191
-1 Urborg Elf (APC) 90
-1 Venerated Rotpriest (PONE) 192p
-1 Venser, Corpse Puppet (ONE) 219
-1 Viridescent Bog (DSC) 324
-1 Viridian Corrupter (ONC) 113
-1 Voidwing Hybrid (ONE) 221
-1 Vraska's Fall (ONE) 116
-1 Whispersilk Cloak (DSC) 257
-1 Woodland Cemetery (TDC) 412
-1 Yavimaya Coast (TDC) 413
+1 Stadium Headliner (TDM) 122
+1 Sundering Growth (MM3) 211
+1 Swiftfoot Boots (NCC) 382
+1 Swords to Plowshares (TDC) 134
+1 Talisman of Conviction (TDC) 329
+1 Talisman of Unity (MKC) 244
+1 Temple of Abandon (M3C) 385
+1 Temple of Plenty (BLC) 343
+1 Temple of the False God (DSC) 313
+1 Temple of Triumph (BLC) 344
+1 Tender Wildguide (BLB) 196
+1 The Jolly Balloon Man (DSK) 219
+1 Thornglint Bridge (MH2) 258
+1 Trostani, Selesnya's Voice (PLST) GK1-102
+1 Tumbleweed Rising (OTJ) 187
+1 Vitalize (WTH) 145
+1 Wayfaring Temple (PLST) MM3-202
+1 Wind-Scarred Crag (DFT) 271
+1 Wood Elves (LTC) 263
+1 Wooded Ridgeline (BLC) 353
