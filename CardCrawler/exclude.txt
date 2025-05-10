@@ -1,4 +1,4 @@
-Abraded Bluffs
+﻿Abraded Bluffs
 Alpine Meadow
 Arcane Sanctum
 Arctic Treeline
@@ -78,4 +78,4 @@ Temple of Mystery
 Temple of Plenty
 Temple of Silence
 Temple of Triumph
-Snowfield�Sinkhole
+Snowfield Sinkhole

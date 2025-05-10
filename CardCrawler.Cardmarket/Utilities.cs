@@ -10,12 +10,14 @@ namespace CardCrawler.Cardmarket
     public static partial class Utilities
     {
 
-        [GeneratedRegex(@"^(?:\d*[x|X]*\s+)(?<name>.*?)(?:\s\(.*)?$", RegexOptions.Singleline)]
+        [GeneratedRegex(@"^(?:\d*[x|X]*\s*)(?<name>.*?)(?:\s\(.*)?$", RegexOptions.Singleline)]
         private static partial Regex CardNameExtractionRegex();
 
         public static string CleanCardName(string cardName)
         {
-           return CardNameExtractionRegex().Match(cardName).Groups["name"].Value;
+            cardName = cardName.Replace("\uFEFF", "").Trim();
+            cardName = CardNameExtractionRegex().Match(cardName).Groups["name"].Value;
+            return cardName;
         }
 
         public static string UrlEncodeCardName(string cardName)
