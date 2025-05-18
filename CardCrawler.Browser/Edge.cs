@@ -30,35 +30,44 @@ namespace CardCrawler.Browser
         /// <returns></returns>
         public static async Task<string?> GetPageContent(string url, int retries = 0)
         {
+            try
+            {
+                using IBrowser browser = await Puppeteer.LaunchAsync(launchOptions);
+                using IPage page = await browser.NewPageAsync();
 
-            using IBrowser browser = await Puppeteer.LaunchAsync(launchOptions);
-            using IPage page = await browser.NewPageAsync();
-
-            _ = await page.EvaluateFunctionOnNewDocumentAsync(@"() => {
+                _ = await page.EvaluateFunctionOnNewDocumentAsync(@"() => {
                 Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
             }");
 
-            await page.SetUserAgentAsync(
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
-                "AppleWebKit/537.36 (KHTML, like Gecko) " +
-                "Chrome/116.0.0.0 Safari/537.36 Edg/116.0.0.0"
-            );
+                await page.SetUserAgentAsync(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+                    "AppleWebKit/537.36 (KHTML, like Gecko) " +
+                    "Chrome/116.0.0.0 Safari/537.36 Edg/116.0.0.0"
+                );
 
-            IResponse response = await page.GoToAsync(url, timeout: 0, waitUntil: [WaitUntilNavigation.Networkidle0]);
+                IResponse response = await page.GoToAsync(url, timeout: 0, waitUntil: [
+                           WaitUntilNavigation.DOMContentLoaded,
+                    WaitUntilNavigation.Networkidle0
+                       ]);
 
-            Debug.WriteLine($"GetPageContent: {response.Status}");
-
-            if ((int)response.Status == 429)
-            {
-                if (retries > 5)
+                Debug.WriteLine($"GetPageContent: {response?.Status}");
+                if (response is null || (int)response.Status == 429)
                 {
-                    return null;
+                    if (retries > 5)
+                    {
+                        return null;
+                    }
+                    await Task.Delay(15000);
+                    return await GetPageContent(url, retries++);
                 }
-                await Task.Delay(15000);
+
+                return await page.GetContentAsync();
+            }
+            catch (Exception ex)
+            {
+                File.AppendAllText("CardCrawlerErrors.txt",$"Error fetching page content: {ex.Message}");
                 return await GetPageContent(url, retries++);
             }
-
-            return await page.GetContentAsync();
         }
 
         public static string GetEdgePath()

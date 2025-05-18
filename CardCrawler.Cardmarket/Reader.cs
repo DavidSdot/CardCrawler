@@ -19,10 +19,6 @@ namespace CardCrawler.Cardmarket
         }
     }
 
-    /// <summary>
-    /// Liest Cardmarket-Seiten per Headless Edge (PuppeteerSharp) im Stealth-Modus,
-    /// um Cloudflare-Challenges zuverlässig zu passieren.
-    /// </summary>
     public class Reader
     {
 
@@ -39,9 +35,6 @@ namespace CardCrawler.Cardmarket
 
         public event EventHandler<ReaderEventArgs>? ReaderEventHandler;
 
-        /// <summary>
-        /// Testet, ob Edge die Seite laden kann (um Cloudflare zu umgehen).
-        /// </summary>
         public static async Task<bool> CheckConnection()
         {
             try
@@ -101,15 +94,16 @@ namespace CardCrawler.Cardmarket
             if (resultNode != null)
             {
                 string? urlName = resultNode.Attributes["href"]?.Value.Split('/').Last();
+                if(string.IsNullOrWhiteSpace(urlName))
+                {
+                    return null;
+                }
                 return new CardData(cardName) { UrlName = urlName };
             }
 
             return null;
         }
 
-        /// <summary>
-        /// Parst das gerenderte HTML in CardData.
-        /// </summary>
         private static CardData? ParseCardPage(string html, CardData card)
         {
             HtmlDocument doc = new();
@@ -134,7 +128,6 @@ namespace CardCrawler.Cardmarket
                 return null;
             }
 
-            // Trend-Preis
             HtmlNode? trendNode = doc.DocumentNode.SelectSingleNode("//*[@id=\"info\"]/div/dl/dd[4]/span");
             if (trendNode != null &&
                 decimal.TryParse(trendNode.InnerText.Replace("€", "").Trim().Replace(",", "."),
@@ -145,7 +138,6 @@ namespace CardCrawler.Cardmarket
                 card.PriceTrend = trend;
             }
 
-            // Optionally parse other prices
             HtmlNodeCollection? priceNodes = doc.DocumentNode.SelectNodes(
                 "//div[contains(@class,'price-container')]//span[contains(@class,'bold')]");
             if (priceNodes != null)

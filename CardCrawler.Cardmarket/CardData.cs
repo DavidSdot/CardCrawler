@@ -13,7 +13,7 @@ namespace CardCrawler.Cardmarket
         public string UrlName { get; set; } = string.Empty;
 
         public string ImageUrl { get; set; } = string.Empty;
-        public Stream ImageStream { get; set; } = null;
+        public Stream? ImageStream { get; set; } = null;
 
         public decimal PriceTrend { get; set; }
         public decimal PriceAvg10 => Prices.Take(10).Average();
