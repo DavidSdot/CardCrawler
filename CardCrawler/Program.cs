@@ -6,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace CardCrawler
@@ -28,15 +29,13 @@ namespace CardCrawler
         ];
 
         private static string? inputPath;
-        private static string? outputPath;
         private static string? excludeFile;
         private static bool excludeBasics;
         private static bool excludeFirst;
         private static decimal budgetLimit = 20.00M;
 
-        private static readonly List<string> BasicLands = new()
-            { "Forest","Island","Mountain","Plains","Swamp" };
-        private static readonly List<string> ExcludedCards = new();
+        private static readonly List<string> BasicLands = ["Forest", "Island", "Mountain", "Plains", "Swamp"];
+        private static readonly List<string> ExcludedCards = [];
 
         private class StatusEntry(string name)
         {
@@ -55,18 +54,18 @@ namespace CardCrawler
             foreach (string line in Banner)
             {
                 Console.WriteLine(line);
+                Thread.Sleep(50);
             }
-
             Console.WriteLine();
 
-            var unnamed = new List<string>();
+            List<string> unnamed = [];
             bool showHelp = false;
 
             foreach (string arg in args)
             {
                 if (arg.StartsWith("--exclude=", StringComparison.Ordinal))
                 {
-                    excludeFile = arg.Substring("--exclude=".Length);
+                    excludeFile = arg["--exclude=".Length..];
                 }
                 else if (arg.Equals("--excludeFirst", StringComparison.Ordinal))
                 {
@@ -103,7 +102,7 @@ namespace CardCrawler
             }
 
             inputPath = unnamed[0];
-            outputPath = unnamed.Count > 1 ? unnamed[1] : null;
+            string outputPath = unnamed.Count > 1 ? unnamed[1] : string.Empty;
 
             List<string> lines = [.. File.ReadLines(inputPath!).Where(l => !string.IsNullOrWhiteSpace(l))];
             if (lines.Count == 0)
@@ -120,13 +119,10 @@ namespace CardCrawler
                 }
             }
 
-            Reader reader = new();
-
-            reader.ReaderEventHandler += (s, e) =>
+            Reader.ReaderEventHandler += (s, e) =>
             {
                 Debug.WriteLine(e.Message);
-            }
-            ;
+            };
 
             Console.Write("Checking Cardmarket... ");
             while (!await Reader.CheckConnection())
@@ -176,7 +172,7 @@ namespace CardCrawler
                 Console.SetCursorPosition(0, statusLine);
                 Console.Write($"↪ Fetching: {cleanName}".PadRight(Console.WindowWidth));
 
-                CardData? card = await reader.GetCardData(cleanName);
+                CardData? card = await Reader.GetCardData(cleanName);
 
                 bool isBasic = BasicLands.Contains(cleanName);
                 bool isExcluded = ExcludedCards.Contains(cleanName);
@@ -191,7 +187,7 @@ namespace CardCrawler
                 if (card is not null)
                 {
                     statusList[i] = new(card.Name);
-                    sym = include ? "✓" : "~";
+                    sym = include ? "✔️" : "~";
                     price = $"{card.PriceTrend:0.00}€";
                     info = include ? "included" : "excluded";
                     if (include)
@@ -201,9 +197,8 @@ namespace CardCrawler
                 }
                 else
                 {
-                    sym = "X";
+                    sym = "✖";
                     price = "-.--€";
-                    info = "included";
                     info = "notfound";
                 }
                 statusList[i].Symbol = sym;
@@ -223,7 +218,7 @@ namespace CardCrawler
 
             if (!string.IsNullOrWhiteSpace(outputPath))
             {
-                await SaveCsvAsync(statusList, total);
+                await SaveCsvAsync(outputPath, statusList, total);
                 Console.WriteLine($"\nSaved CSV to {outputPath}");
             }
         }
@@ -237,7 +232,7 @@ namespace CardCrawler
             Console.WriteLine(new string('-', 3 + 2 + nameW + 3 + priceW + 3 + infoW));
             foreach (StatusEntry e in list)
             {
-                Console.ForegroundColor = e.Symbol == "✓" ? ConsoleColor.Green
+                Console.ForegroundColor = e.Symbol == "✔️" ? ConsoleColor.Green
                                      : e.Symbol == "✖" ? ConsoleColor.Red
                                      : ConsoleColor.DarkGray;
                 Console.Write($" {e.Symbol} ");
@@ -254,8 +249,12 @@ namespace CardCrawler
             Console.WriteLine($"{"     ".PadRight(nameW)}  Total: {total:0.00}€ | Budget: {budget - total:0.00}€");
         }
 
-        private static async Task SaveCsvAsync(List<StatusEntry> list, decimal total)
+        private static async Task SaveCsvAsync(string outputPath, List<StatusEntry> list, decimal total)
         {
+            if (string.IsNullOrWhiteSpace(outputPath))
+            {
+                return;
+            }
             StringBuilder sb = new();
             _ = sb.AppendLine("Symbol;Price;Info;Name");
             foreach (StatusEntry e in list)
@@ -264,7 +263,7 @@ namespace CardCrawler
             }
 
             _ = sb.AppendLine($"TOTAL;{total:0.00}€;{(total > budgetLimit ? "FAILED" : "PASSED")};");
-            await File.WriteAllTextAsync(outputPath!, sb.ToString());
+            await File.WriteAllTextAsync(outputPath, sb.ToString());
         }
 
         private static void PrintUsage()

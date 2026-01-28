@@ -1,7 +1,6 @@
 ﻿using CardCrawler.Browser;
 using HtmlAgilityPack;
 using System;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -10,16 +9,12 @@ using System.Web;
 namespace CardCrawler.Cardmarket
 {
 
-    public class ReaderEventArgs : EventArgs
+    public class ReaderEventArgs(string msg) : EventArgs
     {
-        public string Message { get; }
-        public ReaderEventArgs(string msg)
-        {
-            Message = msg;
-        }
+        public string Message { get; } = msg;
     }
 
-    public class Reader
+    public static class Reader
     {
 
         public const string BaseUrl = "https://www.cardmarket.com";
@@ -33,7 +28,7 @@ namespace CardCrawler.Cardmarket
             "language=1,3"
         ];
 
-        public event EventHandler<ReaderEventArgs>? ReaderEventHandler;
+        public static event EventHandler<ReaderEventArgs>? ReaderEventHandler;
 
         public static async Task<bool> CheckConnection()
         {
@@ -48,16 +43,18 @@ namespace CardCrawler.Cardmarket
             }
         }
 
-        public async Task<CardData?> GetCardData(string cardName)
+        public static async Task<CardData?> GetCardData(string cardName)
         {
             CardData card = new(cardName);
             string urlName = Utilities.UrlEncodeCardName(card.Name);
+
             Log($"Search by URL...{urlName}");
             string url = $"{CardUrl}{urlName}?{string.Join("&", Parameters)}";
-
             string? html = await Edge.GetPageContent(url);
-            if (!string.IsNullOrWhiteSpace(html) && ParseCardPage(html, card) is CardData foundCard)
+
+            if (!string.IsNullOrWhiteSpace(html) && ParseCardPage(html) is CardData foundCard)
             {
+                foundCard.UrlName = urlName;
                 return foundCard;
             }
 
@@ -69,7 +66,7 @@ namespace CardCrawler.Cardmarket
                 html = await Edge.GetPageContent(url);
                 if (html != null)
                 {
-                    return ParseCardPage(html, namedCard);
+                    return ParseCardPage(html);
                 }
             }
 
@@ -104,7 +101,7 @@ namespace CardCrawler.Cardmarket
             return null;
         }
 
-        private static CardData? ParseCardPage(string html, CardData card)
+        private static CardData? ParseCardPage(string html)
         {
             HtmlDocument doc = new();
             doc.LoadHtml(html);
@@ -116,17 +113,15 @@ namespace CardCrawler.Cardmarket
                 return null;
             }
 
-            if (card.Name != titleNode.InnerText.Trim())
-            {
-                card = new(titleNode.InnerText.Trim());
-            }
-
-            Debug.WriteLine($"Card: {card.Name}");
-
-            if (card.Name.Contains("404"))
+            string title = titleNode.InnerText.Trim();
+            if (title.Contains("404"))
             {
                 return null;
             }
+
+            Log($"Card: {title}");
+
+            CardData card = new(title);
 
             HtmlNode? trendNode = doc.DocumentNode.SelectSingleNode("//*[@id=\"info\"]/div/dl/dd[4]/span");
             if (trendNode != null &&
@@ -156,9 +151,9 @@ namespace CardCrawler.Cardmarket
             return card;
         }
 
-        private void Log(string msg)
+        private static void Log(string msg)
         {
-            ReaderEventHandler?.Invoke(this, new ReaderEventArgs(msg));
+            ReaderEventHandler?.Invoke(null, new ReaderEventArgs(msg));
         }
     }
 }

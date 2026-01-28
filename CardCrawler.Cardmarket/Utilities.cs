@@ -12,6 +12,10 @@ namespace CardCrawler.Cardmarket
 
         [GeneratedRegex(@"^(?:\d*[x|X]*\s*)(?<name>.*?)(?:\s\(.*)?$", RegexOptions.Singleline)]
         private static partial Regex CardNameExtractionRegex();
+        [GeneratedRegex(@"\w+")]
+        private static partial Regex WordExtractionRegex();
+        [GeneratedRegex(@"\s")]
+        private static partial Regex WhitespaceRegex();
 
         public static string CleanCardName(string cardName)
         {
@@ -22,8 +26,8 @@ namespace CardCrawler.Cardmarket
 
         public static string UrlEncodeCardName(string cardName)
         {
-            cardName = string.Join(" ", Regex.Matches(cardName, @"\w+").Select(m => m.Value));
-            cardName = Regex.Replace(cardName, @"\s", "-");
+            cardName = string.Join(" ", WordExtractionRegex().Matches(cardName).Select(m => m.Value));
+            cardName = WhitespaceRegex().Replace(cardName, "-");
             return cardName;
         }
 
