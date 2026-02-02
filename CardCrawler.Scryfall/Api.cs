@@ -9,11 +9,11 @@ namespace CardCrawler.Scryfall
     public static class Api
     {
 
-        public static async Task<List<CachedCard>> UpdateLocalCardData(string file)
+        public static async Task UpdateLocalCardData(string file)
         {
             if (!File.Exists(file))
             {
-                return [];
+                return;
             }
 
             List<CachedCard> cards = [];
@@ -37,11 +37,6 @@ namespace CardCrawler.Scryfall
                     if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(name))
                     {
                         continue;
-                    }
-
-                    if (id == "838c915d-8153-43c2-b513-dfbe4e9388a5")
-                    {
-                        Console.WriteLine(jsonNode);
                     }
 
                     decimal price = 0;
@@ -69,7 +64,6 @@ namespace CardCrawler.Scryfall
             string cachePath = Path.Combine(Path.GetDirectoryName(file) ?? string.Empty, "scryfall_prices.json");
             await File.WriteAllTextAsync(cachePath, JsonSerializer.Serialize(cards));
 
-            return cards;
         }
     }
 
