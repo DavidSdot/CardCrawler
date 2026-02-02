@@ -31,10 +31,6 @@ namespace CardCrawler.Scryfall
                     if (data != null)
                     {
                         _prices = data.ToDictionary(k => k.Id, v => v.Price);
-                        // Group by name and pick the lowest price for duplicates? Or just overwrite?
-                        // User asked for "lowest price" in search, but cache structure is just "one entry per card object".
-                        // If multiple prints exist, we have multiple entries.
-                        // For name lookup, we want the lowest price across all prints with that name.
                         _pricesByName = data
                             .GroupBy(c => c.Name.ToLowerInvariant().Trim())
                             .ToDictionary(g => g.Key, g => g.Min(c => c.Price));
@@ -69,17 +65,9 @@ namespace CardCrawler.Scryfall
                 return new CardData(cardName)
                 {
                     PriceTrend = cachedPrice,
-                    Url = $"https://scryfall.com/search?q={System.Web.HttpUtility.UrlEncode(cardName)}&order=eur"
+                    Url = $"https://scryfall.com/search?q=cards/search?q=!\"{HttpUtility.UrlEncode($"{cardName}\" prefer:eur-low")}"
                 };
             }
-
-            // Fallback to API if not in cache (optional, but requested in previous steps?)
-            // Actually, offline provider usually implies NO api calls, but current code mixed them.
-            // Let's keep API fallback for "not found locally" or just return null?
-            // User requested "UpdateLocalCardData stores ID/Name/Price", implying reliance on local data.
-            // BUT, if we want to be fully offline, we return here.
-            // Given the previous code had API calls, I should probably keep them OR check if "offline mode" is stricter.
-            // Let's assume we use local if found, else API.
 
             HttpClient client = new()
             {
@@ -129,6 +117,8 @@ namespace CardCrawler.Scryfall
                 Url = url,
                 PriceTrend = eurPrice
             };
+
+            LastRequest = DateTime.Now;
 
             return card;
         }

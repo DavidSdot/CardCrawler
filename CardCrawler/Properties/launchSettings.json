@@ -2,7 +2,7 @@
   "profiles": {
     "CardCrawler": {
       "commandName": "Project",
-      "commandLineArgs": "Deck.txt --limit=1.00"
+      "commandLineArgs": "Deck.txt --limit=0.50"
     },
     "update-scryfall-cache": {
       "commandName": "Project",

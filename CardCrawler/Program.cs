@@ -125,7 +125,7 @@ namespace CardCrawler
                     include = false;
                 }
 
-                string sym, info = "", price;
+                string sym, info = "";
                 if (card is not null)
                 {
                     // Use clean name from card provider if available
@@ -133,12 +133,9 @@ namespace CardCrawler
 
                     sym = include ? "✔" : "~";
                     decimal rowTotal = card.PriceTrend * count;
-                    price = $"{rowTotal:0.00}€";
 
-                    if (count > 1)
-                    {
-                        statusList[i].Name += $" ({card.PriceTrend})";
-                    }
+                    statusList[i].UnitPrice = card.PriceTrend;
+                    statusList[i].TotalPrice = rowTotal;
 
                     if (options.PriceLimit > 0 && card.PriceTrend > options.PriceLimit)
                     {
@@ -162,12 +159,10 @@ namespace CardCrawler
                 else
                 {
                     sym = "✖";
-                    price = "-.--€";
                     info = "not found";
                     statusList[i] = new StatusEntry(cleanName) { Count = count };
                 }
                 statusList[i].Symbol = sym;
-                statusList[i].Price = price;
                 statusList[i].Info = info;
 
                 ConsoleUi.PrintStatusResult(statusList[i], original, resultLine);
@@ -177,7 +172,7 @@ namespace CardCrawler
 
             Console.Clear();
             ConsoleUi.ShowBanner();
-            ConsoleUi.DrawTable(statusList, options.BudgetLimit, total);
+            ConsoleUi.DrawTable(statusList, options, total);
 
             if (!string.IsNullOrWhiteSpace(options.OutputPath))
             {

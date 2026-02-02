@@ -33,48 +33,103 @@ namespace CardCrawler
             Console.WriteLine();
         }
 
-        public static void DrawTable(List<StatusEntry> list, decimal budget, decimal total)
+        public static void DrawTable(List<StatusEntry> list, CrawlerOptions options, decimal total)
         {
-            int nameW = list.Max(l => l.Name.Length);
-            int countW = 5; // Fixed width for count
-            int priceW = list.Max(l => l.Price.ToString().Length);
-            int infoW = 12;
+            // Dynamic column visibility
+            bool showInfo = options.ExcludeBasics || options.ExcludeFirst || !string.IsNullOrEmpty(options.ExcludeFile);
 
+            // Calculate column widths
+            int countW = 7;
+            int nameW = Math.Max(20, list.Max(l => l.Name.Length) + 2);
+            int unitPriceW = 12;
+            int totalPriceW = 12;
+            int infoW = showInfo ? Math.Max(10, list.Max(l => l.Info.Length) + 2) : 0;
+
+            // Box drawing characters
+            string tl = "┌";
+            string tr = "┐";
+            string bl = "└";
+            string br = "┘";
+            string h = "─";
+            string v = "│";
+            string t = "┬";
+            string b = "┴";
+            string x = "┼";
+
+            // Build header
             Console.ResetColor();
-            Console.WriteLine($" ST | {"Count".PadLeft(countW)} | {"Name".PadRight(nameW)} | {"Price".PadLeft(priceW)} | {"Info".PadRight(infoW)}");
-            Console.WriteLine(new string('-', 3 + 2 + countW + 3 + nameW + 3 + priceW + 3 + infoW));
+
+            // Top border
+            Console.Write(tl + new string('─', 4) + t + new string('─', countW) + t + new string('─', nameW) + t + new string('─', unitPriceW) + t + new string('─', totalPriceW));
+            if (showInfo)
+                Console.Write(t + new string('─', infoW));
+            Console.WriteLine(tr);
+
+            // Header Row
+            Console.Write(v + " ST " + v + " Count ".PadRight(countW) + v + " Name".PadRight(nameW) + v + " Unit Price ".PadLeft(unitPriceW) + v + " Total Price".PadLeft(totalPriceW));
+            if (showInfo)
+                Console.Write(v + " Info".PadRight(infoW));
+            Console.WriteLine(v);
+
+            // Separator
+            Console.Write(x.PadLeft(1, '├') + new string('─', 4) + x + new string('─', countW) + x + new string('─', nameW) + x + new string('─', unitPriceW) + x + new string('─', totalPriceW));
+            if (showInfo)
+                Console.Write(x + new string('─', infoW));
+            Console.WriteLine("┤");
 
             foreach (StatusEntry e in list)
             {
+                Console.ResetColor();
+                Console.Write(v);
+                Console.Write($" {e.Symbol}  ");
 
-                Console.ForegroundColor = ConsoleColor.Green;
-                if (e.ExceedsLimit || e.Symbol != "✔")
+                Console.Write(v);
+                Console.Write($"{e.Count}x".PadLeft(countW - 1) + " ");
+                Console.Write(v + " ");
+                Console.Write(e.Name.PadRight(nameW - 1));
+                Console.Write(v + " ");
+                if (e.ExceedsLimit)
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                 }
-                Console.Write($" {e.Symbol} ");
+                Console.Write($"{e.UnitPrice:0.00}€".PadLeft(unitPriceW - 1));
                 Console.ResetColor();
-                Console.Write(" | ");
-                Console.Write($"{e.Count}x".PadLeft(countW));
-                Console.Write(" | ");
-                Console.Write(e.Name.PadRight(nameW));
-                Console.Write(" | ");
-                Console.Write(e.Price.PadLeft(priceW));
-                Console.Write(" | ");
-                Console.Write(e.Info.PadRight(infoW));
+                Console.Write(v + " ");
+                Console.Write($"{e.TotalPrice:0.00}€".PadLeft(totalPriceW - 1));
 
-                Console.WriteLine();
+                if (showInfo)
+                {
+                    Console.Write(v + " ");
+                    Console.Write(e.Info.PadRight(infoW - 1));
+                }
+
+                Console.WriteLine(v);
             }
-            Console.WriteLine(new string('-', 3 + 2 + countW + 3 + nameW + 3 + priceW + 3 + infoW));
+
+            // Bottom border
+            Console.Write(bl + new string('─', 4) + b + new string('─', countW) + b + new string('─', nameW) + b + new string('─', unitPriceW) + b + new string('─', totalPriceW));
+            if (showInfo)
+                Console.Write(b + new string('─', infoW));
+            Console.WriteLine(br);
 
             int totalCards = list.Sum(e => e.Count);
-            string status = (budget > 0 && total > budget) || list.Any(e => e.ExceedsLimit) ? "NOT OK" : "OK";
+            string status = (options.BudgetLimit > 0 && total > options.BudgetLimit) || list.Any(e => e.ExceedsLimit) ? "NOT OK" : "OK";
 
-            // Format: Total: xx.xx€ | Cards: XX | Status: OK | Remaining: xx.xx€
-            Console.WriteLine($"{"     ".PadRight(countW + 3 + nameW)}  Total: {total:0.00}€ | Cards: {totalCards} | Status: {status}");
-            if (budget > 0)
+            Console.WriteLine();
+            Console.WriteLine($" Total: {total:0.00}€");
+            Console.WriteLine($" Cards: {totalCards}");
+            Console.WriteLine($" Status: {status}");
+
+            if (options.BudgetLimit > 0)
             {
-                Console.WriteLine($"{"     ".PadRight(countW + 3 + nameW)}  Budget Left: {budget - total:0.00}€");
+                decimal left = options.BudgetLimit - total;
+                Console.Write(" Budget Left: ");
+                if (left < 0)
+                    Console.ForegroundColor = ConsoleColor.Red;
+                else
+                    Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine($"{left:0.00}€");
+                Console.ResetColor();
             }
         }
 
@@ -99,20 +154,9 @@ namespace CardCrawler
 
         public static void PrintStatusResult(StatusEntry entry, string originalName, int resultLine)
         {
-            // Use entry data or reconstruct string? The original code formatted a string:
-            // $"{sym} {info} {price}: {(card is null ? original : card.Name)}"
-            // statusEntry contains sym, price, info. Name is stored.
-            // But originalName might differ from entry.Name if card found under different name.
-            // Let's print using the entry data.
-
             string displayName = entry.Name;
-            // Logic in Program.cs was: card is null ? original : card.Name
-            // If card was found, entry.Name = card.Name. If not found, statusList[i] was initialized with original name?
-            // Actually in Program.cs: `statusList[i] = new(card.Name)` if found.
-            // Otherwise initialized with `lines.Select(n => new StatusEntry(n))` -> original name. 
-            // So entry.Name covers both cases mostly.
-
-            string statusResult = $"{entry.Symbol} {entry.Info} {entry.Price}: {displayName}";
+            string priceStr = entry.TotalPrice > 0 ? $"{entry.TotalPrice:0.00}€" : "-.--€";
+            string statusResult = $"{entry.Symbol} {entry.Info} {priceStr}: {displayName}";
             Console.SetCursorPosition(0, resultLine);
             Console.Write(statusResult.PadRight(Console.WindowWidth));
         }

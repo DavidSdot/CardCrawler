@@ -19,7 +19,7 @@ namespace CardCrawler
             _ = sb.AppendLine("Symbol;Count;Price;Info;Name");
             foreach (StatusEntry e in list)
             {
-                _ = sb.AppendLine($"{e.Symbol};{e.Count};{e.Price};{e.Info};{e.Name.Replace("\"", "\"\"")}");
+                _ = sb.AppendLine($"{e.Symbol};{e.Count};{e.UnitPrice:0.00}€;{e.Info};{e.Name.Replace("\"", "\"\"")}");
             }
 
             int totalCards = list.Sum(e => e.Count);
