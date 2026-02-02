@@ -11,6 +11,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CardCrawler.Browser\CardCrawler.Browser.csproj" />
+    <ProjectReference Include="..\CardCrawler.Core\CardCrawler.Core.csproj" />
   </ItemGroup>
 
 </Project>

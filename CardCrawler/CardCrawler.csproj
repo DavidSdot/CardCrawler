@@ -23,6 +23,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CardCrawler.CardMarket\CardCrawler.Cardmarket.csproj" />
+    <ProjectReference Include="..\CardCrawler.Core\CardCrawler.Core.csproj" />
+    <ProjectReference Include="..\CardCrawler.Scryfall\CardCrawler.Scryfall.csproj" />
   </ItemGroup>
 
   <ItemGroup>

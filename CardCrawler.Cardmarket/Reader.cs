@@ -1,4 +1,6 @@
 ﻿using CardCrawler.Browser;
+using CardCrawler.Core.Models;
+
 using HtmlAgilityPack;
 using System;
 using System.Globalization;
@@ -131,21 +133,6 @@ namespace CardCrawler.Cardmarket
                                  out decimal trend))
             {
                 card.PriceTrend = trend;
-            }
-
-            HtmlNodeCollection? priceNodes = doc.DocumentNode.SelectNodes(
-                "//div[contains(@class,'price-container')]//span[contains(@class,'bold')]");
-            if (priceNodes != null)
-            {
-                card.Prices.Clear();
-                foreach (HtmlNode n in priceNodes)
-                {
-                    string text = n.InnerText.Replace("€", "").Trim();
-                    if (decimal.TryParse(text, NumberStyles.Any, CultureInfo.InvariantCulture, out decimal p))
-                    {
-                        card.Prices.Add(p);
-                    }
-                }
             }
 
             return card;

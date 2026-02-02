@@ -1,0 +1,15 @@
+  Wiederherzustellende Projekte werden ermittelt...
+  Alle Projekte sind f├╝r die Wiederherstellung auf dem neuesten Stand.
+  CardCrawler.Core -> e:\Source\David\CardCrawler\CardCrawler.Core\bin\Debug\net10.0\CardCrawler.Core.dll
+  CardCrawler.Browser -> e:\Source\David\CardCrawler\CardCrawler.Browser\bin\Debug\net10.0-windows7.0\CardCrawler.Browser.dll
+  CardCrawler.Scryfall -> e:\Source\David\CardCrawler\CardCrawler.Scryfall\bin\Debug\net10.0\CardCrawler.Scryfall.dll
+  CardCrawler.Cardmarket -> e:\Source\David\CardCrawler\CardCrawler.CardMarket\bin\Debug\net10.0-windows7.0\CardCrawler.Cardmarket.dll
+e:\Source\David\CardCrawler\CardCrawler\CsvExporter.cs(24,35): error CS1061: "List<StatusEntry>" enth├ñlt keine Definition f├╝r "Sum", und es konnte keine zug├ñngliche Sum-Erweiterungsmethode gefunden werden, die ein erstes Argument vom Typ "List<StatusEntry>" akzeptiert (m├Âglicherweise fehlt eine using-Direktive oder ein Assemblyverweis). [e:\Source\David\CardCrawler\CardCrawler\CardCrawler.csproj]
+
+Fehler beim Buildvorgang.
+
+e:\Source\David\CardCrawler\CardCrawler\CsvExporter.cs(24,35): error CS1061: "List<StatusEntry>" enth├ñlt keine Definition f├╝r "Sum", und es konnte keine zug├ñngliche Sum-Erweiterungsmethode gefunden werden, die ein erstes Argument vom Typ "List<StatusEntry>" akzeptiert (m├Âglicherweise fehlt eine using-Direktive oder ein Assemblyverweis). [e:\Source\David\CardCrawler\CardCrawler\CardCrawler.csproj]
+    0 Warnung(en)
+    1 Fehler
+
+Verstrichene Zeit 00:00:04.98
