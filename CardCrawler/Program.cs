@@ -1,146 +1,93 @@
-﻿using CardCrawler.Cardmarket;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using CardCrawler.Cardmarket;
+using CardCrawler.Core.Models;
+using CardCrawler.Scryfall;
+
 namespace CardCrawler
 {
     internal class Program
     {
-
-        private static readonly string[] Banner =
-        [
-            "▄████▄   ▄▄▄       ██▀███  ▓█████▄  ▄████▄   ██▀███   ▄▄▄       █     █░ ██▓    ▓█████  ██▀███  ",
-            "▒██▀ ▀█  ▒████▄    ▓██ ▒ ██▒▒██▀ ██▌▒██▀ ▀█  ▓██ ▒ ██▒▒████▄    ▓█░ █ ░█░▓██▒    ▓█   ▀ ▓██ ▒ ██▒",
-            "▒▓█    ▄ ▒██  ▀█▄  ▓██ ░▄█ ▒░██   █▌▒▓█    ▄ ▓██ ░▄█ ▒▒██  ▀█▄  ▒█░ █ ░█ ▒██░    ▒███   ▓██ ░▄█ ▒",
-            "▒▓▓▄ ▄██▒░██▄▄▄▄██ ▒██▀▀█▄  ░▓█▄   ▌▒▓▓▄ ▄██▒▒██▀▀█▄  ░██▄▄▄▄██ ░█░ █ ░█ ▒██░    ▒▓█  ▄ ▒██▀▀█▄  ",
-            "▒ ▓███▀ ░ ▓█   ▓██▒░██▓ ▒██▒░▒████▓ ▒ ▓███▀ ░░██▓ ▒██▒ ▓█   ▓██▒░░██▒██▓ ░██████▒░▒████▒░██▓ ▒██▒",
-            "░ ░▒ ▒  ░ ▒▒   ▓▒█░░ ▒▓ ░▒▓░ ▒▒▓  ▒ ░ ░▒ ▒  ░░ ▒▓ ░▒▓░ ▒▒   ▓▒█░░ ▓░▒ ▒  ░ ▒░▓  ░░░ ▒░ ░░ ▒▓ ░▒▓░",
-            "  ░  ▒     ▒   ▒▒ ░  ░▒ ░ ▒░ ░ ▒  ▒   ░  ▒     ░▒ ░ ▒░  ▒   ▒▒ ░  ▒ ░ ░  ░ ░ ▒  ░ ░ ░  ░  ░▒ ░ ▒░",
-            "░          ░   ▒     ░░   ░  ░ ░  ░ ░          ░░   ░   ░   ▒     ░   ░    ░ ░      ░     ░░   ░ ",
-            "░ ░            ░  ░   ░        ░    ░ ░         ░           ░  ░    ░        ░  ░   ░  ░   ░     ",
-            "░                            ░      ░                                                            "
-        ];
-
-        private static string? inputPath;
-        private static string? outputPath;
-        private static string? excludeFile;
-        private static bool excludeBasics;
-        private static bool excludeFirst;
-        private static decimal budgetLimit = 20.00M;
-
-        private static readonly List<string> BasicLands = new()
-            { "Forest","Island","Mountain","Plains","Swamp" };
-        private static readonly List<string> ExcludedCards = new();
-
-        private class StatusEntry(string name)
-        {
-            public string Name { get; } = name;
-            public string Symbol { get; set; } = " ";
-            public string Price { get; set; } = "--";
-            public string Info { get; set; } = "waiting";
-        }
+        private static readonly List<string> BasicLands = ["Forest", "Island", "Mountain", "Plains", "Swamp"];
+        private static readonly List<string> ExcludedCards = [];
 
         private static async Task Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
 
-            Console.Clear();
+            ConsoleUi.ShowBanner();
 
-            foreach (string line in Banner)
+            CrawlerOptions? options = ArgumentParser.Parse(args);
+            if (options == null)
             {
-                Console.WriteLine(line);
+                return;
             }
 
-            Console.WriteLine();
-
-            var unnamed = new List<string>();
-            bool showHelp = false;
-
-            foreach (string arg in args)
+            if (options.UpdateScryfallPriceCache && !string.IsNullOrWhiteSpace(options.UpdateScryfallFile))
             {
-                if (arg.StartsWith("--exclude=", StringComparison.Ordinal))
+                Console.WriteLine("Updating Scryfall cache...");
+                await Api.UpdateLocalCardData(options.UpdateScryfallFile);
+                Console.WriteLine("Done.");
+                return;
+            }
+
+            Reader.ReaderEventHandler += (s, e) =>
+            {
+                Debug.WriteLine(e.Message);
+            };
+
+            List<string> lines = [];
+            if (options.InputPath != null)
+            {
+                lines = [.. File.ReadLines(options.InputPath).Where(l => !string.IsNullOrWhiteSpace(l))];
+                if (lines.Count == 0)
                 {
-                    excludeFile = arg.Substring("--exclude=".Length);
-                }
-                else if (arg.Equals("--excludeFirst", StringComparison.Ordinal))
-                {
-                    excludeFirst = true;
-                }
-                else if (arg.Equals("--no-basics", StringComparison.Ordinal))
-                {
-                    excludeBasics = true;
-                }
-                else if (arg.StartsWith("--budget=", StringComparison.Ordinal) &&
-                         decimal.TryParse(arg.AsSpan("--budget=".Length), NumberStyles.Any, CultureInfo.InvariantCulture, out decimal b))
-                {
-                    budgetLimit = b;
-                }
-                else if (arg.Equals("--help", StringComparison.Ordinal) || arg.Equals("-h", StringComparison.Ordinal))
-                {
-                    showHelp = true;
-                }
-                else if (arg.StartsWith("--", StringComparison.Ordinal))
-                {
-                    Console.WriteLine($"Unknown option: {arg}");
+                    Console.WriteLine("No cards found in input file.");
                     return;
                 }
-                else
-                {
-                    unnamed.Add(arg);
-                }
             }
 
-            if (unnamed.Count == 0 || showHelp)
+            if (!string.IsNullOrWhiteSpace(options.ExcludeFile) && File.Exists(options.ExcludeFile))
             {
-                PrintUsage();
-                return;
-            }
-
-            inputPath = unnamed[0];
-            outputPath = unnamed.Count > 1 ? unnamed[1] : null;
-
-            List<string> lines = [.. File.ReadLines(inputPath!).Where(l => !string.IsNullOrWhiteSpace(l))];
-            if (lines.Count == 0)
-            {
-                Console.WriteLine("No cards found in input file.");
-                return;
-            }
-
-            if (!string.IsNullOrWhiteSpace(excludeFile) && File.Exists(excludeFile))
-            {
-                foreach (string name in File.ReadLines(excludeFile).Where(l => !string.IsNullOrWhiteSpace(l)))
+                foreach (string name in File.ReadLines(options.ExcludeFile).Where(l => !string.IsNullOrWhiteSpace(l)))
                 {
                     ExcludedCards.Add(Utilities.CleanCardName(name));
                 }
             }
 
-            Reader reader = new();
-
-            reader.ReaderEventHandler += (s, e) =>
+            Core.Interfaces.ICardDataProvider provider;
+            if (options.DataSource == "cardmarket")
             {
-                Debug.WriteLine(e.Message);
+                provider = new CardmarketProvider();
+                Console.WriteLine("Using Cardmarket as data source.\r\n");
+                await CheckCardSource(provider);
             }
-            ;
-
-            Console.Write("Checking Cardmarket... ");
-            while (!await Reader.CheckConnection())
+            else
             {
-                Console.WriteLine("FAILED, retrying...");
-                await Task.Delay(2000);
-                Console.Write("Checking Cardmarket... ");
+                string cachePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "scryfall_prices.json");
+                if (!File.Exists(cachePath))
+                {
+                    cachePath = "scryfall_prices.json";
+                }
+
+                ScryfallProvider scryfall = new(cachePath);
+                await scryfall.InitializeAsync();
+                provider = scryfall;
+
+                Console.WriteLine("Using Scryfall as data source.\r\n");
             }
-            Console.WriteLine("OK\r\n");
-            if (excludeFirst)
+
+            if (options.ExcludeFirst)
             {
                 Console.WriteLine("Excluding first card from total");
             }
-            if (excludeBasics)
+            if (options.ExcludeBasics)
             {
                 Console.WriteLine("Excluding basic lands from total");
             }
@@ -163,138 +110,87 @@ namespace CardCrawler
             for (int i = 0; i < lines.Count; i++)
             {
                 string original = lines[i];
-                string cleanName = Utilities.CleanCardName(original);
+                (int count, string cleanName) = Utilities.ParseCardLine(original);
 
-                const int barW = 20;
-                int filled = (int)((i + 1) * barW / (double)lines.Count);
-                string bar = "[" + new string('█', filled) + new string('░', barW - filled) + "]";
-                int pct = (i + 1) * 100 / lines.Count;
+                ConsoleUi.UpdateProgress(i, lines.Count, total, options.BudgetLimit, headerLine, cleanName, statusLine);
 
-                Console.SetCursorPosition(0, headerLine);
-                Console.Write($"> Processing {i + 1}/{lines.Count} {bar} ({pct}%) | Total: {total:0.00}€ | Left: {budgetLimit - total:0.00}€".PadRight(Console.WindowWidth));
-
-                Console.SetCursorPosition(0, statusLine);
-                Console.Write($"↪ Fetching: {cleanName}".PadRight(Console.WindowWidth));
-
-                CardData? card = await reader.GetCardData(cleanName);
+                CardData? card = await provider.GetCardData(cleanName);
 
                 bool isBasic = BasicLands.Contains(cleanName);
                 bool isExcluded = ExcludedCards.Contains(cleanName);
-                bool include = !((excludeBasics && isBasic) || isExcluded);
+                bool include = !((options.ExcludeBasics && isBasic) || isExcluded);
 
-                if (i == 0 && excludeFirst)
+                if (i == 0 && options.ExcludeFirst)
                 {
                     include = false;
                 }
 
-                string sym, info, price;
+                string sym, info = "";
                 if (card is not null)
                 {
-                    statusList[i] = new(card.Name);
-                    sym = include ? "✓" : "~";
-                    price = $"{card.PriceTrend:0.00}€";
-                    info = include ? "included" : "excluded";
-                    if (include)
+                    // Use clean name from card provider if available
+                    statusList[i] = new(card.Name) { Count = count };
+
+                    sym = include ? "✔" : "~";
+                    decimal rowTotal = card.PriceTrend * count;
+
+                    statusList[i].UnitPrice = card.PriceTrend;
+                    statusList[i].TotalPrice = rowTotal;
+
+                    if (options.PriceLimit > 0 && card.PriceTrend > options.PriceLimit)
                     {
-                        total += card.PriceTrend;
+                        statusList[i].ExceedsLimit = true;
                     }
+
+                    if (options.ExcludeBasics || ExcludedCards.Count > 0)
+                    {
+                        info = include ? "included" : "excluded";
+                        if (include)
+                        {
+                            total += rowTotal;
+                        }
+                    }
+                    else
+                    {
+                        total += rowTotal;
+                    }
+
                 }
                 else
                 {
-                    sym = "X";
-                    price = "-.--€";
-                    info = "included";
-                    info = "notfound";
+                    sym = "✖";
+                    info = "not found";
+                    statusList[i] = new StatusEntry(cleanName) { Count = count };
                 }
                 statusList[i].Symbol = sym;
-                statusList[i].Price = price;
                 statusList[i].Info = info;
 
-                string statusResult =
-                    $"{sym} {info} {price}: {(card is null ? original : card.Name)}";
-                Console.SetCursorPosition(0, resultLine);
-                Console.Write(statusResult.PadRight(Console.WindowWidth));
+                ConsoleUi.PrintStatusResult(statusList[i], original, resultLine);
 
-                await Task.Delay(50);
+                await Task.Delay(25);
             }
 
-            Console.WriteLine();
-            DrawTable(statusList, budgetLimit, total);
+            Console.Clear();
+            ConsoleUi.ShowBanner();
+            ConsoleUi.DrawTable(statusList, options, total);
 
-            if (!string.IsNullOrWhiteSpace(outputPath))
+            if (!string.IsNullOrWhiteSpace(options.OutputPath))
             {
-                await SaveCsvAsync(statusList, total);
-                Console.WriteLine($"\nSaved CSV to {outputPath}");
+                await CsvExporter.SaveCsvAsync(options.OutputPath, statusList, total, options.BudgetLimit);
+                Console.WriteLine($"\nSaved CSV to {options.OutputPath}");
             }
         }
 
-        private static void DrawTable(List<StatusEntry> list, decimal budget, decimal total)
+        private static async Task CheckCardSource(Core.Interfaces.ICardDataProvider provider)
         {
-            int nameW = list.Max(l => l.Name.Length);
-            int priceW = list.Max(l => l.Price.ToString().Length);
-            int infoW = 12;
-            Console.WriteLine($" ST | {"Name".PadRight(nameW)} | {"Price".PadLeft(priceW)} | {"Info".PadRight(infoW)}");
-            Console.WriteLine(new string('-', 3 + 2 + nameW + 3 + priceW + 3 + infoW));
-            foreach (StatusEntry e in list)
+            Console.Write($"Checking {provider.SourceName}... ");
+            while (!await provider.CheckConnection())
             {
-                Console.ForegroundColor = e.Symbol == "✓" ? ConsoleColor.Green
-                                     : e.Symbol == "✖" ? ConsoleColor.Red
-                                     : ConsoleColor.DarkGray;
-                Console.Write($" {e.Symbol} ");
-                Console.ResetColor();
-                Console.Write(" | ");
-                Console.Write(e.Name.PadRight(nameW));
-                Console.Write(" | ");
-                Console.Write(e.Price.PadLeft(priceW));
-                Console.Write(" | ");
-                Console.Write(e.Info.PadRight(infoW));
-                Console.WriteLine();
+                Console.WriteLine("FAILED, retrying...");
+                await Task.Delay(2000);
+                Console.Write($"Checking {provider.SourceName}... ");
             }
-            Console.WriteLine(new string('-', 3 + 2 + nameW + 3 + priceW + 3 + infoW));
-            Console.WriteLine($"{"     ".PadRight(nameW)}  Total: {total:0.00}€ | Budget: {budget - total:0.00}€");
+            Console.WriteLine("OK\r\n");
         }
-
-        private static async Task SaveCsvAsync(List<StatusEntry> list, decimal total)
-        {
-            StringBuilder sb = new();
-            _ = sb.AppendLine("Symbol;Price;Info;Name");
-            foreach (StatusEntry e in list)
-            {
-                _ = sb.AppendLine($"{e.Symbol};{e.Price};{e.Info};{e.Name.Replace("\"", "\"\"")}");
-            }
-
-            _ = sb.AppendLine($"TOTAL;{total:0.00}€;{(total > budgetLimit ? "FAILED" : "PASSED")};");
-            await File.WriteAllTextAsync(outputPath!, sb.ToString());
-        }
-
-        private static void PrintUsage()
-        {
-            Console.WriteLine("Usage:");
-            Console.WriteLine("  CardCrawler <input-file> [output-file] [options]");
-            Console.WriteLine();
-            Console.WriteLine("Description:");
-            Console.WriteLine("  Fetches price data for a list of Magic cards from Cardmarket,");
-            Console.WriteLine("  shows a live progress indicator, and at the end outputs a summary");
-            Console.WriteLine("  and (optionally) a CSV file.");
-            Console.WriteLine();
-            Console.WriteLine("Arguments:");
-            Console.WriteLine("  <input-file>           Path to a text file containing one card per line.");
-            Console.WriteLine("  [output-file]          (Optional) Path to save results as CSV.");
-            Console.WriteLine();
-            Console.WriteLine("Options:");
-            Console.WriteLine("  --excludeFirst         Exclude the first card from from total (eg. your commander).");
-            Console.WriteLine("  --exclude=<file>       Path to a text file with card names to exclude");
-            Console.WriteLine("                         (one name per line). These cards will be skipped");
-            Console.WriteLine("                         in the total calculation.");
-            Console.WriteLine("  --no-basics            Exclude basic lands (Forest, Island, etc.) from total.");
-            Console.WriteLine("  --budget=<amount>      Set custom budget limit in EUR (default: 20.00).");
-            Console.WriteLine("  -h, --help             Show this help message and exit.");
-            Console.WriteLine();
-            Console.WriteLine("Examples:");
-            Console.WriteLine("  CardCrawler deck.txt");
-            Console.WriteLine("  CardCrawler deck.txt prices.csv --budget=30.00");
-            Console.WriteLine("  CardCrawler deck.txt prices.csv --exclude=ignore.txt --no-basics");
-        }
-
     }
 }

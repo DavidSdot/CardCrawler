@@ -1,104 +1,86 @@
-1 Ghired, Mirror of the Wilds (OTJ) 205
-1 Abraded Bluffs (OTJ) 251
-1 Advent of the Wurm (MM3) 147
-1 Arcane Signet (TDC) 105
-1 Austere Command (LCC) 126
-1 Avacyn's Pilgrim (ISD) 170
-1 Baylen, the Haymaker (BLB) 205
-1 Beast Whisperer (PGRN) 123★ *F*
-1 Beast Within (TDC) 249
-1 Blade of Selves (TDC) 313
-1 Blossoming Sands (TDM) 251
-1 Boros Guildgate (GRN) 243
-1 Boros Signet (TDC) 314
-1 Bovine Intervention (OTJ) 6
-1 Bramble Sovereign (CLB) 218
-1 Bristling Backwoods (OTJ) 253
-1 Cabaretti Confluence (NCC) 69
-1 Cadira, Caller of the Small (CLB) 417
-1 Cadric, Soul Kindler (DMC) 86
-1 Calamity, Galloping Inferno (OTJ) 116
-1 Chaos Warp (DSC) 162
-1 Command Tower (CLB) 351
-1 Creosote Heath (OTJ) 255
-1 Cultivate (DSC) 174
-1 Decanter of Endless Water (CLB) 444
-1 Dragonmaster Outcast (TDC) 211
-1 Druid's Deliverance (MM3) 124
-1 Duke Ulder Ravengard (CLB) 420
-1 Elvish Mystic (CMM) 284
-1 Emmara, Soul of the Accord (GRN) 168
-1 Ertha Jo, Frontier Mentor (OTJ) 203
-1 Etali, Primal Storm (MKC) 152
-1 Exotic Orchard (DSC) 275
-1 Farseek (TDC) 255
-1 Feldon of the Third Path (PLST) C21-169
-1 Fellwar Stone (TDC) 318
-1 Flamerush Rider (MOC) 279
-1 Fortress Kin-Guard (TDM) 12
-1 Gala Greeters (SNC) 450 *F*
-1 Garruk, Primal Hunter (M13) 174
-1 Garruk's Uprising (SCD) 185
-1 Generous Gift (PLST) MH1-11
-1 Ghalta and Mavren (MOM) 386 *F*
-1 Ghired, Conclave Exile (PLST) C19-42
-1 Giant Adephage (DSC) 179
-1 Growing Ranks (C19) 193
-1 Gruff Triplets (WOE) 172
-1 Gruul Guildgate (CLU) 237
-1 Gruul Signet (BLC) 273
-1 Hammer of Purphoros (THS) 124
-1 Harmonize (DSC) 182
-1 Hate Mirage (SCD) 146
-1 Idol of Oblivion (TDC) 319
-1 Intangible Virtue (PIP) 163
-1 Ironwill Forger (TDC) 13
-1 Jaxis, the Troublemaker (PSNC) 112p
-1 Jungle Shrine (MKC) 268
-1 Lightning Greaves (TDC) 102
-1 Llanowar Elves (FDN) 227
-1 Mimic Vat (C18) 209
-1 Neyali, Suns' Vanguard (ONC) 30 *E*
-1 Orthion, Hero of Lavabrink (MOM) 334
-1 Path to Exile (ACR) 81
-1 Radiant Grove (TDC) 385
-1 Rampaging Baloths (FDN) 645
-1 Rampant Growth (7ED) 262
-1 Reliquary Tower (TDC) 386
-1 Return of the Wildspeaker (C21) 205
-1 Riling Dawnbreaker // Signaling Roar (TDM) 21
-1 Rite of Harmony (MID) 236
-1 Rogue's Passage (MKC) 284
-1 Rootborn Defenses (RTR) 19
-1 Roxanne, Starfall Savant (OTJ) 228
-1 Rugged Highlands (TDM) 265
-1 Rustvale Bridge (MH2) 253
-1 Sacred Peaks (MKC) 285
-1 Sage of the Skies (TDM) 22
-1 Sakura-Tribe Elder (TDC) 266
-1 Second Harvest (INR) 417
-1 Selesnya Guildgate (GRN) 256
-1 Selesnya Signet (TDC) 324
-1 Shamanic Revelation (SCD) 211
-1 Slagwoods Bridge (DRC) 171
-1 Sol Ring (TDC) 106
-1 Stadium Headliner (TDM) 122
-1 Sundering Growth (MM3) 211
-1 Swiftfoot Boots (NCC) 382
-1 Swords to Plowshares (TDC) 134
-1 Talisman of Conviction (TDC) 329
-1 Talisman of Unity (MKC) 244
-1 Temple of Abandon (M3C) 385
-1 Temple of Plenty (BLC) 343
-1 Temple of the False God (DSC) 313
-1 Temple of Triumph (BLC) 344
-1 Tender Wildguide (BLB) 196
-1 The Jolly Balloon Man (DSK) 219
-1 Thornglint Bridge (MH2) 258
-1 Trostani, Selesnya's Voice (PLST) GK1-102
-1 Tumbleweed Rising (OTJ) 187
-1 Vitalize (WTH) 145
-1 Wayfaring Temple (PLST) MM3-202
-1 Wind-Scarred Crag (DFT) 271
-1 Wood Elves (LTC) 263
-1 Wooded Ridgeline (BLC) 353
+1 Clavileño, First of the Blessed
+1x Geothermal Bog (DMR) 235
+1x Graf Rats (SIR) 91
+1x Tribute to Horobi (NEO) 124
+1 Oran-Rief Hydra (DDR) 16
+1 asdfasdfsadf
+1 Firebrand Archer (HOU) 92
+1 Jori En, Ruin Diver (OGW) 155
+1 Iron-Fist Pulverizer (OTJ) 131 *F*
+1 Tormod's Crypt (DMR) 235
+1 Revitalizing Repast // Old-Growth Grove (MH3) 256
+
+
+
+1 Acclaimed Contender
+1 Accorder Paladin
+1 Arcane Signet
+1 Ascend from Avernus
+1 Attended Knight
+1 Ayara's Oathsworn
+1 Basri Ket
+1 Basri's Lieutenant
+1 Belle of the Brawl
+1 Benalish Marshal
+1 Blacklance Paragon
+1 Blood Beckoning
+1 Breathless Knight
+1 Call the Cavalry
+1 Circle of Protection: Black
+1 Circle of Protection: Blue
+1 Circle of Protection: Green
+1 Circle of Protection: Red
+1 Command Tower
+1 Commander's Sphere
+1 Coordinated Barrage
+1 Corpse Knight
+1 Crippling Fear
+1 Dauntless Bodyguard
+1 Day of Judgment
+1 Despark
+1 Dire Tactics
+1 Doom Blade
+1 Esper Panorama
+1 Etchings of the Chosen
+1 Evolving Wilds
+1 Fracture
+1 Knight Exemplar
+1 Knight of Grace
+1 Knight of Malice
+1 Knights' Charge
+1 Liliana's Standard Bearer
+1 Militant Angel
+1 Mortify
+1 No Rest for the Wicked
+1 Northern Paladin
+1 Oblivion Ring
+1 Oketra's Monument
+1 Orzhov Basilica
+1 Pack's Disdain
+1 Path to Exile
+
+1 Rally the Ranks
+1 Read the Bones
+1 Righteous Confluence
+1 Secluded Courtyard
+1 Shay Cormac
+1 Sign in Blood
+1 Silver Knight
+1 Silverwing Squadron
+1 Skulltap
+1 Sol Ring
+1 Southern Paladin
+1 Sun Titan
+
+1 Syr Konrad, the Grim
+1 Tainted Field
+1 Terramorphic Expanse
+1 The Circle of Loyalty
+1 Ultramarines Honour Guard
+1 Unbreakable Formation
+1 Valiant Knight
+1 Vault of the Archangel
+1 Vindicate
+1 White Knight
+1 Wintermoor Commander
+1 Worthy Knight

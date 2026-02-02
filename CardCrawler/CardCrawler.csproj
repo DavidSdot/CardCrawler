@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>net9.0-windows</TargetFramework>
+    <TargetFramework>net10.0-windows7.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
   </PropertyGroup>
@@ -23,6 +23,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CardCrawler.CardMarket\CardCrawler.Cardmarket.csproj" />
+    <ProjectReference Include="..\CardCrawler.Core\CardCrawler.Core.csproj" />
+    <ProjectReference Include="..\CardCrawler.Scryfall\CardCrawler.Scryfall.csproj" />
   </ItemGroup>
 
   <ItemGroup>
