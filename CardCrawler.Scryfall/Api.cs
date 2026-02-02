@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 
 using CardCrawler.Core.Models;
@@ -36,6 +37,11 @@ namespace CardCrawler.Scryfall
                     if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(name))
                     {
                         continue;
+                    }
+
+                    if (id == "838c915d-8153-43c2-b513-dfbe4e9388a5")
+                    {
+                        Console.WriteLine(jsonNode);
                     }
 
                     decimal price = 0;

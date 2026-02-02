@@ -23,11 +23,12 @@ namespace CardCrawler
 
         public static void ShowBanner()
         {
+            Console.ResetColor();
             Console.Clear();
             foreach (string line in Banner)
             {
                 Console.WriteLine(line);
-                Thread.Sleep(50);
+                Thread.Sleep(40);
             }
             Console.WriteLine();
         }
@@ -39,20 +40,20 @@ namespace CardCrawler
             int priceW = list.Max(l => l.Price.ToString().Length);
             int infoW = 12;
 
-            Console.WriteLine($" ST  | {"Count".PadLeft(countW)} | {"Name".PadRight(nameW)} | {"Price".PadLeft(priceW)} | {"Info".PadRight(infoW)}");
+            Console.ResetColor();
+            Console.WriteLine($" ST | {"Count".PadLeft(countW)} | {"Name".PadRight(nameW)} | {"Price".PadLeft(priceW)} | {"Info".PadRight(infoW)}");
             Console.WriteLine(new string('-', 3 + 2 + countW + 3 + nameW + 3 + priceW + 3 + infoW));
 
             foreach (StatusEntry e in list)
             {
-                
-                Console.Write($" {e.Symbol} ");
 
                 Console.ForegroundColor = ConsoleColor.Green;
-
-                if (e.ExceedsLimit || e.Symbol == "✔")
+                if (e.ExceedsLimit || e.Symbol != "✔")
                 {
                     Console.ForegroundColor = ConsoleColor.Red;
                 }
+                Console.Write($" {e.Symbol} ");
+                Console.ResetColor();
                 Console.Write(" | ");
                 Console.Write($"{e.Count}x".PadLeft(countW));
                 Console.Write(" | ");
@@ -65,15 +66,15 @@ namespace CardCrawler
                 Console.WriteLine();
             }
             Console.WriteLine(new string('-', 3 + 2 + countW + 3 + nameW + 3 + priceW + 3 + infoW));
-            
-             int totalCards = list.Sum(e => e.Count);
-             string status = (budget > 0 && total > budget) || list.Any(e => e.ExceedsLimit) ? "NOT OK" : "OK";
-             
-             // Format: Total: xx.xx€ | Cards: XX | Status: OK | Remaining: xx.xx€
+
+            int totalCards = list.Sum(e => e.Count);
+            string status = (budget > 0 && total > budget) || list.Any(e => e.ExceedsLimit) ? "NOT OK" : "OK";
+
+            // Format: Total: xx.xx€ | Cards: XX | Status: OK | Remaining: xx.xx€
             Console.WriteLine($"{"     ".PadRight(countW + 3 + nameW)}  Total: {total:0.00}€ | Cards: {totalCards} | Status: {status}");
             if (budget > 0)
             {
-                 Console.WriteLine($"{"     ".PadRight(countW + 3 + nameW)}  Budget Left: {budget - total:0.00}€");
+                Console.WriteLine($"{"     ".PadRight(countW + 3 + nameW)}  Budget Left: {budget - total:0.00}€");
             }
         }
 

@@ -40,7 +40,7 @@ namespace CardCrawler.Scryfall
                             .ToDictionary(g => g.Key, g => g.Min(c => c.Price));
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
                     // Ignore load errors
                 }
@@ -96,7 +96,7 @@ namespace CardCrawler.Scryfall
                 await Task.Delay((int)wait);
             }
 
-            HttpResponseMessage? response = await client.GetAsync($"cards/search?q={HttpUtility.UrlEncode($"{cardName} prefer:eur-low")} ");
+            HttpResponseMessage? response = await client.GetAsync($"cards/search?q=!\"{HttpUtility.UrlEncode($"{cardName}\" prefer:eur-low")} ");
 
             if (response is null || !response.IsSuccessStatusCode)
             {

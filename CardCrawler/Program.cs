@@ -131,7 +131,7 @@ namespace CardCrawler
                     // Use clean name from card provider if available
                     statusList[i] = new(card.Name) { Count = count };
 
-                    sym = include ? "✔️" : "~";
+                    sym = include ? "✔" : "~";
                     decimal rowTotal = card.PriceTrend * count;
                     price = $"{rowTotal:0.00}€";
 
@@ -161,7 +161,7 @@ namespace CardCrawler
                 }
                 else
                 {
-                    sym = "✖ ";
+                    sym = "✖";
                     price = "-.--€";
                     info = "not found";
                     statusList[i] = new StatusEntry(cleanName) { Count = count };

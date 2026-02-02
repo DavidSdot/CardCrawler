@@ -1,86 +1,15 @@
 1 Elas il-Kor, Sadistic Pilgrim (DMU) 297
-1 Abdel Adrian, Gorion's Ward (CLB) 375
-1 Accursed Marauder (MH3) 80
-1 Agent of the Iron Throne (CLB) 107
-1 Altar's Reap (CNS) 112
-1 Annihilating Glare (ONE) 80
-1 Arcane Signet (AFC) 197
-1 Aron, Benalia's Ruin (DMU) 193 *F*
-1 Bartolomé del Presidio (LCI) 301
-1 Bastion of Remembrance (FIC) 274
-1 Benalish Sleeper (DMU) 8 *F*
-1 Benevolent Bodyguard (EMA) 4
-1 Bone Shards (MH2) 76
-1 Bone Splinters (BFZ) 105
-1 Buried Alive (MH3) 273
-1 Cathar Commando (FDN) 139
-1 Command Tower (ONC) 151
-1 Corrupted Conviction (MOM) 98
-1 Costly Plunder (XLN) 96
-1 Cruel Celebrant (WAR) 188
-1 Curious Farm Animals (TLA) 14
-1 Deadly Dispute (PIP) 184
-1 Death Denied (MM2) 76
-1 Denethor, Ruling Steward (LTR) 198
-1 Diabolic Tutor (M12) 92
-1 Disenchant (BRO) 6
-1 Doomed Traveler (CMR) 19
-1 Driver of the Dead (DDQ) 56
-1 Duty Beyond Death (TDM) 10
-1 Emergency Weld (BRO) 93
-1 Feast of the Victorious Dead (MAT) 30
-1 Final Parting (CMM) 160
-1 Final Payment (RNA) 171
-1 Final Vengeance (DSK) 99
-1 Ghoulish Procession (INR) 110 *F*
-1 Gods Willing (2X2) 12
-1 Heliod's Pilgrim (THB) 20
-1 Hidden Stockpile (2XM) 201
-1 Hunted Witness (GRN) 15
-1 Illicit Shipment (SNC) 83
-1 Infestation Sage (FDN) 64
-1 Lingering Tormentor (EVE) 36
-1 Marauding Blight-Priest (FDN) 178
-1 Militia Bugler (M19) 29
-1 Minion's Return (THB) 104
-1 Mirkwood Bats (LTR) 95
-1 Morbid Opportunist (BLC) 183
-1 Mortuary Mire (C18) 266
-1 Murder (J25) 467
-1 Orzhov Guildgate (RNA) 252
-1 Orzhov Signet (RVR) 263
-1 Pacifism (M11) 23
-1 Patch Up (SNC) 23
-1 Pestilence (4ED) 152
-15 Plains (SOI) 284
-1 Putrid Goblin (MH1) 101
-1 Ravenous Amulet (FDN) 131
-1 Reassembling Skeleton (MM2) 92
-1 Recommission (BRO) 22
-1 Relic Vial (ZNR) 250
-1 Shred Memory (RAV) 105
-1 Sign in Blood (M13) 110
-1 Slaughter the Strong (CMR) 48
-1 Sol Ring (C15) 268
-1 Stitch Together (FIC) 286
-1 Sunlit Marsh (FIC) 431
-1 Supernatural Stamina (GN3) 62
-15 Swamp (ECL) 281
-1 Swords to Plowshares (DDF) 22
-1 Syr Konrad, the Grim (ZNC) 56
-1 Tainted Field (MOC) 429
-1 Temple of the False God (WHO) 320
-1 Terramorphic Expanse (M10) 229
-1 Tragic Slip (EMA) 109
-1 Transmogrant Altar (BRO) 124
-1 Unearth (A25) 113
-1 Unholy Indenture (M20) 119
-1 Vampiric Rites (FDN) 615
-1 Victimize (CMM) 195
-1 Village Rites (GN3) 64
-1 Viscera Seer (LCC) 213
-1 Vizier of Remedies (AKH) 38
-1 Vizkopa Guildmage (GK2) 47
-1 Witch's Cauldron (CMM) 199
 
 5 notfound
+
+10 Forest (AFR) 349
+11 Snow-Covered Forest (AFR) 350
+12 Island (AFR) 351
+13 Snow-Covered Island (AFR) 352
+14 Swamp (AFR) 353
+15 Snow-Covered Swamp (AFR) 354
+16 Mountain (AFR) 355
+17 Snow-Covered Mountain (AFR) 356
+18 Plains (AFR) 357
+19 Snow-Covered Plains (AFR) 358
+
