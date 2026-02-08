@@ -4,9 +4,17 @@
       "commandName": "Project",
       "commandLineArgs": "Deck.txt --limit=0.50"
     },
-    "update-scryfall-cache": {
+    "scryfall: update-cache": {
       "commandName": "Project",
-      "commandLineArgs": "--update-scryfall-cache=all-cards-20260202102343.json"
+      "commandLineArgs": "--update-cache"
+    },
+    "cardmarket: read deck": {
+      "commandName": "Project",
+      "commandLineArgs": "Deck.txt Prices_cm.txt --limit=1.00 --datasource=cardmarket"
+    },
+    "cardmarket: update-cache": {
+      "commandName": "Project",
+      "commandLineArgs": "--update-cache --datasource=cardmarket"
     }
   }
 }

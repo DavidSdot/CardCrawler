@@ -1,55 +1,91 @@
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Web;
 
-using CardCrawler.Core.Interfaces;
+using CardCrawler.Core;
 using CardCrawler.Core.Models;
 
 namespace CardCrawler.Scryfall
 {
-    public class ScryfallProvider : ICardDataProvider
+    public class ScryfallProvider : BaseCardProvider
     {
-        public string SourceName => "Scryfall";
-        private Dictionary<string, decimal> _prices = [];
-        private Dictionary<string, decimal> _pricesByName = [];
-        private readonly string _cacheFile;
-
-        public ScryfallProvider(string cacheFile)
+        public override string SourceName => "Scryfall";
+        
+        // Static HttpClient to avoid socket exhaustion
+        private static readonly HttpClient _client = new()
         {
-            _cacheFile = cacheFile;
+            BaseAddress = new Uri("https://api.scryfall.com/")
+        };
+
+        static ScryfallProvider()
+        {
+            _client.DefaultRequestHeaders.Add("User-Agent", "CardCrawler/1.0");
+            _client.DefaultRequestHeaders.Add("Accept", "application/json;q=0.9,*/*;q=0.8");
         }
 
-        public async Task InitializeAsync()
+        public ScryfallProvider() : base("scryfall_prices.json")
         {
-            if (File.Exists(_cacheFile))
+        }
+
+        public override async Task UpdateLocalCardData()
+        {
+            var dInfo = new DirectoryInfo(Directory.GetCurrentDirectory());
+            var files = dInfo.GetFiles("all-cards-*.json");
+            if (files.Length == 0)
             {
-                try
+                return;
+            }
+
+            List<CachedCard> cards = [];
+            JsonSerializerOptions options = new()
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            string file = files.First().FullName;
+
+            try
+            {
+                using FileStream stream = File.OpenRead(file);
+                await foreach (System.Text.Json.Nodes.JsonObject? jsonNode in JsonSerializer.DeserializeAsyncEnumerable<System.Text.Json.Nodes.JsonObject>(stream, options))
                 {
-                    string content = await File.ReadAllTextAsync(_cacheFile);
-                    // Try to deserialize as List<CachedCard>
-                    List<CachedCard>? data = JsonSerializer.Deserialize<List<CachedCard>>(content);
-                    if (data != null)
+                    if (jsonNode == null)
                     {
-                        _prices = data.ToDictionary(k => k.Id, v => v.Price);
-                        _pricesByName = data
-                            .GroupBy(c => c.Name.ToLowerInvariant().Trim())
-                            .ToDictionary(g => g.Key, g => g.Min(c => c.Price));
+                        continue;
                     }
-                }
-                catch (Exception ex)
-                {
-                    // Ignore load errors
+                    string? id = jsonNode["id"]?.GetValue<string>();
+                    string? name = jsonNode["name"]?.GetValue<string>();
+
+                    if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(name))
+                    {
+                        continue;
+                    }
+
+                    decimal price = -1;
+                    System.Text.Json.Nodes.JsonNode? pricesNode = jsonNode["prices"];
+                    if (pricesNode is not null)
+                    {
+                        string? eurStr = pricesNode["eur"]?.GetValue<string>();
+                        if (eurStr != null)
+                        {
+                            decimal.TryParse(eurStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out price);
+                        }
+                    }
+                    cards.Add(new CachedCard(id, name, price));
                 }
             }
-        }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error parsing Scryfall data: {ex.Message}");
+            }
 
-        public Task<bool> CheckConnection()
-        {
-            return Task.FromResult(_prices.Count > 0);
+            await File.WriteAllTextAsync(_cacheFile, JsonSerializer.Serialize(cards));
         }
 
         public DateTime LastRequest = DateTime.MinValue;
-        public async Task<CardData?> GetCardData(string cardName)
+        
+        public override async Task<CardData?> GetCardData(string cardName)
         {
             if (string.IsNullOrWhiteSpace(cardName))
             {
@@ -58,24 +94,14 @@ namespace CardCrawler.Scryfall
 
             // Fast local lookup
             string key = cardName.ToLowerInvariant().Trim();
-            if (_pricesByName.TryGetValue(key, out decimal cachedPrice))
+            if (_pricesByName.TryGetValue(key, out decimal? cachedPrice))
             {
-                // Create a minimal card data from cache
-                // Note: valid URL is harder without storing it, but we can generate a search URL
                 return new CardData(cardName)
                 {
                     PriceTrend = cachedPrice,
                     Url = $"https://scryfall.com/search?q=cards/search?q=!\"{HttpUtility.UrlEncode($"{cardName}\" prefer:eur-low")}"
                 };
             }
-
-            HttpClient client = new()
-            {
-                BaseAddress = new Uri("https://api.scryfall.com/")
-            };
-            client.DefaultRequestHeaders.Add("User-Agent", "CardCrawler/1.0");
-            client.DefaultRequestHeaders.Add("Accept", "application/json;q=0.9,*/*;q=0.8");
-
 
             DateTime nextRequest = LastRequest + TimeSpan.FromMilliseconds(100);
             double wait = (nextRequest - DateTime.Now).TotalMilliseconds;
@@ -84,7 +110,7 @@ namespace CardCrawler.Scryfall
                 await Task.Delay((int)wait);
             }
 
-            HttpResponseMessage? response = await client.GetAsync($"cards/search?q=!\"{HttpUtility.UrlEncode($"{cardName}\" prefer:eur-low")} ");
+            HttpResponseMessage? response = await _client.GetAsync($"cards/search?q=!\"{HttpUtility.UrlEncode($"{cardName}\" prefer:eur-low")} ");
 
             if (response is null || !response.IsSuccessStatusCode)
             {

@@ -1,14 +1,13 @@
-﻿using System;
+﻿using CardCrawler.Cardmarket;
+using CardCrawler.Core.Interfaces;
+using CardCrawler.Core.Models;
+using CardCrawler.Scryfall;
+using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-using CardCrawler.Cardmarket;
-using CardCrawler.Core.Models;
-using CardCrawler.Scryfall;
 
 namespace CardCrawler
 {
@@ -20,67 +19,82 @@ namespace CardCrawler
         private static async Task Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
-
+            Console.Clear();
+#if !DEBUG
             ConsoleUi.ShowBanner();
-
+#endif
             CrawlerOptions? options = ArgumentParser.Parse(args);
             if (options == null)
             {
+                // ArgumentParser handles printing usage/errors for us (mostly) but if it returns null without having printed usage for help...
+                // Actually ArgumentParser prints usage if unnamed.Count == 0 and not update mode.
                 return;
             }
 
-            if (options.UpdateScryfallPriceCache && !string.IsNullOrWhiteSpace(options.UpdateScryfallFile))
+            // 1. Initialize Provider
+            ICardDataProvider provider;
+
+            // Allow fallback if needed, but ScryfallProvider handles missing file by just not loading cache.
+
+            if (options.DataSource == "cardmarket")
             {
-                Console.WriteLine("Updating Scryfall cache...");
-                await Api.UpdateLocalCardData(options.UpdateScryfallFile);
+                provider = new CardMarketProvider();
+            }
+            else
+            {
+                provider = new ScryfallProvider();
+            }
+
+            // 2. Handle Cache Update Mode
+            if (options.UpdateCache)
+            {
+                Console.WriteLine($"Updating local card data from {provider.SourceName}...");
+                await provider.UpdateLocalCardData();
                 Console.WriteLine("Done.");
                 return;
             }
 
-            Reader.ReaderEventHandler += (s, e) =>
-            {
-                Debug.WriteLine(e.Message);
-            };
+            // 3. Initialize Provider (Load Cache)
+            await provider.InitializeAsync();
+            Console.WriteLine($"Using {provider.SourceName} as data source.\r\n");
 
+            // 4. Check Connection (Only if actually fetching prices)
+            await CheckCardSource(provider);
+
+            // 5. Read Input File
             List<string> lines = [];
             if (options.InputPath != null)
             {
-                lines = [.. File.ReadLines(options.InputPath).Where(l => !string.IsNullOrWhiteSpace(l))];
+                if (File.Exists(options.InputPath))
+                {
+                    lines = [.. File.ReadLines(options.InputPath).Where(l => !string.IsNullOrWhiteSpace(l))];
+                }
+                else
+                {
+                    Console.WriteLine($"Input file not found: {options.InputPath}");
+                    return;
+                }
+
                 if (lines.Count == 0)
                 {
                     Console.WriteLine("No cards found in input file.");
                     return;
                 }
             }
+            else
+            {
+                // Should have been caught by ArgumentParser but just in case
+                Console.WriteLine("No input file specified.");
+                return;
+            }
 
+            // 6. Handle Exclusions
             if (!string.IsNullOrWhiteSpace(options.ExcludeFile) && File.Exists(options.ExcludeFile))
             {
                 foreach (string name in File.ReadLines(options.ExcludeFile).Where(l => !string.IsNullOrWhiteSpace(l)))
                 {
                     ExcludedCards.Add(Utilities.CleanCardName(name));
                 }
-            }
-
-            Core.Interfaces.ICardDataProvider provider;
-            if (options.DataSource == "cardmarket")
-            {
-                provider = new CardmarketProvider();
-                Console.WriteLine("Using Cardmarket as data source.\r\n");
-                await CheckCardSource(provider);
-            }
-            else
-            {
-                string cachePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "scryfall_prices.json");
-                if (!File.Exists(cachePath))
-                {
-                    cachePath = "scryfall_prices.json";
-                }
-
-                ScryfallProvider scryfall = new(cachePath);
-                await scryfall.InitializeAsync();
-                provider = scryfall;
-
-                Console.WriteLine("Using Scryfall as data source.\r\n");
             }
 
             if (options.ExcludeFirst)
@@ -97,6 +111,7 @@ namespace CardCrawler
             }
             Console.WriteLine("\r\n");
 
+            // 7. Process Cards
             List<StatusEntry> statusList = [.. lines.Select(n => new StatusEntry(n))];
             decimal total = 0M;
 
@@ -128,13 +143,12 @@ namespace CardCrawler
                 string sym, info = "";
                 if (card is not null)
                 {
-                    // Use clean name from card provider if available
                     statusList[i] = new(card.Name) { Count = count };
 
                     sym = include ? "✔" : "~";
-                    decimal rowTotal = card.PriceTrend * count;
+                    decimal rowTotal = card.PriceTrend ?? 0 * count;
 
-                    statusList[i].UnitPrice = card.PriceTrend;
+                    statusList[i].UnitPrice = card.PriceTrend ?? 0;
                     statusList[i].TotalPrice = rowTotal;
 
                     if (options.PriceLimit > 0 && card.PriceTrend > options.PriceLimit)
@@ -165,23 +179,25 @@ namespace CardCrawler
                 statusList[i].Symbol = sym;
                 statusList[i].Info = info;
 
-                ConsoleUi.PrintStatusResult(statusList[i], original, resultLine);
+                ConsoleUi.PrintStatusResult(statusList[i], resultLine);
 
                 await Task.Delay(25);
             }
 
             Console.Clear();
+#if !DEBUG
             ConsoleUi.ShowBanner();
+#endif
             ConsoleUi.DrawTable(statusList, options, total);
 
             if (!string.IsNullOrWhiteSpace(options.OutputPath))
             {
-                await CsvExporter.SaveCsvAsync(options.OutputPath, statusList, total, options.BudgetLimit);
+                await CsvExporter.SaveCsvAsync(options, statusList, total);
                 Console.WriteLine($"\nSaved CSV to {options.OutputPath}");
             }
         }
 
-        private static async Task CheckCardSource(Core.Interfaces.ICardDataProvider provider)
+        private static async Task CheckCardSource(ICardDataProvider provider)
         {
             Console.Write($"Checking {provider.SourceName}... ");
             while (!await provider.CheckConnection())

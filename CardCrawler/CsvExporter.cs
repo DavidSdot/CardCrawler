@@ -9,9 +9,9 @@ namespace CardCrawler
 {
     public static class CsvExporter
     {
-        public static async Task SaveCsvAsync(string outputPath, List<StatusEntry> list, decimal total, decimal budgetLimit)
+        public static async Task SaveCsvAsync(CrawlerOptions options, List<StatusEntry> list, decimal total)
         {
-            if (string.IsNullOrWhiteSpace(outputPath))
+            if (string.IsNullOrWhiteSpace(options.OutputPath))
             {
                 return;
             }
@@ -23,15 +23,22 @@ namespace CardCrawler
             }
 
             int totalCards = list.Sum(e => e.Count);
-            if (budgetLimit > 0)
+            bool passedBudget = options.BudgetLimit <= 0 || total <= options.BudgetLimit;
+
+            if (passedBudget || options.PriceLimit > 0)
             {
-                _ = sb.AppendLine($"TOTAL;{totalCards};{total:0.00}€;{(total > budgetLimit ? "FAILED" : "PASSED")};");
+                passedBudget = !list.Any(e => e.UnitPrice > options.PriceLimit);
+            }
+
+            if (options.BudgetLimit > 0 || options.PriceLimit > 0)
+            {
+                _ = sb.AppendLine($"TOTAL;{totalCards};{total:0.00}€;{(passedBudget ? "PASSED" : "FAILED")};");
             }
             else
             {
-                _ = sb.AppendLine($"TOTAL;{totalCards};{total:0.00}€;OK;");
+                _ = sb.AppendLine($"TOTAL;{totalCards};{total:0.00}€;;");
             }
-            await File.WriteAllTextAsync(outputPath, sb.ToString());
+            await File.WriteAllTextAsync(options.OutputPath, sb.ToString());
         }
     }
 }

@@ -10,6 +10,6 @@ public class CardData(string name)
 
     public string Url { get; set; } = string.Empty;
 
-    public decimal PriceTrend { get; set; }
+    public decimal? PriceTrend { get; set; }
 
 }
