@@ -1,6 +1,7 @@
 1 Clavileño, First of the Blessed
 1x Geothermal Bog (DMR) 235
 1x Graf Rats (SIR) 91
+1x Graf Rats / Chittering Host
 1x Tribute to Horobi (NEO) 124
 1 Oran-Rief Hydra (DDR) 16
 1 asdfasdfsadf
@@ -9,68 +10,16 @@
 1 Iron-Fist Pulverizer (OTJ) 131 *F*
 1 Tormod's Crypt (DMR) 235
 1 Revitalizing Repast // Old-Growth Grove (MH3) 256
+1 Arcane Laboratory
 
-
-
-1 Acclaimed Contender
-1 Accorder Paladin
-1 Arcane Signet
-1 Ascend from Avernus
-1 Attended Knight
 1 Ayara's Oathsworn
 1 Basri Ket
 1 Basri's Lieutenant
-1 Belle of the Brawl
-1 Benalish Marshal
-1 Blacklance Paragon
-1 Blood Beckoning
-1 Breathless Knight
-1 Call the Cavalry
+
 1 Circle of Protection: Black
 1 Circle of Protection: Blue
 1 Circle of Protection: Green
 1 Circle of Protection: Red
-1 Command Tower
-1 Commander's Sphere
-1 Coordinated Barrage
-1 Corpse Knight
-1 Crippling Fear
-1 Dauntless Bodyguard
-1 Day of Judgment
-1 Despark
-1 Dire Tactics
-1 Doom Blade
-1 Esper Panorama
-1 Etchings of the Chosen
-1 Evolving Wilds
-1 Fracture
-1 Knight Exemplar
-1 Knight of Grace
-1 Knight of Malice
-1 Knights' Charge
-1 Liliana's Standard Bearer
-1 Militant Angel
-1 Mortify
-1 No Rest for the Wicked
-1 Northern Paladin
-1 Oblivion Ring
-1 Oketra's Monument
-1 Orzhov Basilica
-1 Pack's Disdain
-1 Path to Exile
-
-1 Rally the Ranks
-1 Read the Bones
-1 Righteous Confluence
-1 Secluded Courtyard
-1 Shay Cormac
-1 Sign in Blood
-1 Silver Knight
-1 Silverwing Squadron
-1 Skulltap
-1 Sol Ring
-1 Southern Paladin
-1 Sun Titan
 
 1 Syr Konrad, the Grim
 1 Tainted Field

@@ -15,8 +15,8 @@ namespace CardCrawler
         public bool ExcludeBasics { get; init; }
         public decimal BudgetLimit { get; init; } = -1M;
         public decimal PriceLimit { get; init; } = -1M;
-        public bool UpdateScryfallPriceCache { get; init; }
-        public string? UpdateScryfallFile { get; init; }
+        public bool UpdateCache { get; init; }
+        public string? UpdateCacheFile { get; init; }
         public List<string> UnnamedArgs { get; init; } = [];
     }
 
@@ -24,7 +24,6 @@ namespace CardCrawler
     {
         public static CrawlerOptions? Parse(string[] args)
         {
-            var options = new CrawlerOptions();
             List<string> unnamed = [];
             bool showHelp = false;
 
@@ -35,9 +34,8 @@ namespace CardCrawler
             bool excludeBasics = false;
             decimal budgetLimit = -1M;
             decimal priceLimit = -1M;
-            bool updateScryfallPriceCache = false;
-            string? updateScryfallFile = null;
-
+            bool updateCache = false;
+            
             foreach (string arg in args)
             {
                 if (arg.StartsWith("--datasource=", StringComparison.Ordinal))
@@ -78,10 +76,9 @@ namespace CardCrawler
                 {
                     showHelp = true;
                 }
-                else if (arg.StartsWith("--update-scryfall-cache=", StringComparison.Ordinal))
+                else if (arg.Equals("--update-cache", StringComparison.Ordinal))
                 {
-                    updateScryfallPriceCache = true;
-                    updateScryfallFile = arg["--update-scryfall-cache=".Length..].Trim();
+                    updateCache = true;
                 }
                 else if (arg.StartsWith("--", StringComparison.Ordinal))
                 {
@@ -94,7 +91,7 @@ namespace CardCrawler
                 }
             }
 
-            if (!updateScryfallPriceCache && (unnamed.Count == 0 || showHelp))
+            if (!updateCache && (unnamed.Count == 0 || showHelp))
             {
                 PrintUsage();
                 return null;
@@ -103,7 +100,7 @@ namespace CardCrawler
             string? inputPath = null;
             string? outputPath = null;
 
-            if (!updateScryfallPriceCache && unnamed.Count > 0)
+            if (!updateCache && unnamed.Count > 0)
             {
                 inputPath = unnamed[0];
                 if (unnamed.Count > 1)
@@ -122,8 +119,8 @@ namespace CardCrawler
                 ExcludeBasics = excludeBasics,
                 BudgetLimit = budgetLimit,
                 PriceLimit = priceLimit,
-                UpdateScryfallPriceCache = updateScryfallPriceCache,
-                UpdateScryfallFile = updateScryfallFile,
+                UpdateCache = updateCache,
+                UpdateCacheFile = unnamed.FirstOrDefault(),
                 UnnamedArgs = unnamed
             };
         }
@@ -152,8 +149,9 @@ namespace CardCrawler
             Console.WriteLine("  --budget=<amount>      Set custom budget limit in EUR (default: 20.00).");
             Console.WriteLine("  --limit=<amount>       Set custom price limit per card in EUR. Cards exceeding");
             Console.WriteLine("                         this limit will be highlighted.");
-            Console.WriteLine("  --update-scryfall-cache=<file>");
-            Console.WriteLine("                         Updates the local price data from scrfall bulk json.");
+            Console.WriteLine("  --update-cache         Updates the local price data for <datasource> from bulk json.");
+            Console.WriteLine("                         cardmarket: price_guide_1.json and products_singles_1.json");
+            Console.WriteLine("                         scyfall: ex. all-cards-2026...........json ");
             Console.WriteLine("  -h, --help             Show this help message and exit.");
             Console.WriteLine();
             Console.WriteLine("Examples:");

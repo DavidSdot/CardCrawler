@@ -8,10 +8,14 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <PublishTrimmed>true</PublishTrimmed>
     <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
-    <PublishTrimmed>True</PublishTrimmed>
     <PublishAot>False</PublishAot>
   </PropertyGroup>
+
+  <ItemGroup>
+    <TrimmerRootAssembly Include="PuppeteerSharp" />
+  </ItemGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <CheckForOverflowUnderflow>True</CheckForOverflowUnderflow>

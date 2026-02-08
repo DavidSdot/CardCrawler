@@ -7,6 +7,8 @@ namespace CardCrawler.Core.Interfaces
     {
         Task<CardData?> GetCardData(string cardName);
         Task<bool> CheckConnection();
+        Task UpdateLocalCardData();
+        Task InitializeAsync();
         string SourceName { get; }
     }
 }

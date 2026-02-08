@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Web;
@@ -10,17 +11,72 @@ namespace CardCrawler.Scryfall
     public class ScryfallProvider : ICardDataProvider
     {
         public string SourceName => "Scryfall";
-        private Dictionary<string, decimal> _prices = [];
-        private Dictionary<string, decimal> _pricesByName = [];
-        private readonly string _cacheFile;
+        private Dictionary<string, decimal?> _prices = [];
+        private Dictionary<string, decimal?> _pricesByName = [];
 
-        public ScryfallProvider(string cacheFile)
+        public ScryfallProvider()
         {
-            _cacheFile = cacheFile;
+        }
+
+        public async Task UpdateLocalCardData()
+        {
+            var dInfo = new DirectoryInfo(Directory.GetCurrentDirectory());
+            var files = dInfo.GetFiles("all-cards-*.json");
+            if (files.Length == 0)
+            {
+                return;
+            }
+
+            List<CachedCard> cards = [];
+            JsonSerializerOptions options = new()
+            {
+                PropertyNameCaseInsensitive = true
+            };
+
+            string file = files.First().FullName;
+
+            try
+            {
+                using FileStream stream = File.OpenRead(file);
+                await foreach (System.Text.Json.Nodes.JsonObject? jsonNode in JsonSerializer.DeserializeAsyncEnumerable<System.Text.Json.Nodes.JsonObject>(stream, options))
+                {
+                    if (jsonNode == null)
+                    {
+                        continue;
+                    }
+                    string? id = jsonNode["id"]?.GetValue<string>();
+                    string? name = jsonNode["name"]?.GetValue<string>();
+
+                    if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(name))
+                    {
+                        continue;
+                    }
+
+                    decimal price = -1;
+                    System.Text.Json.Nodes.JsonNode? pricesNode = jsonNode["prices"];
+                    if (pricesNode is not null)
+                    {
+                        string? eurStr = pricesNode["eur"]?.GetValue<string>();
+                        if (eurStr != null)
+                        {
+                            decimal.TryParse(eurStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out price);
+                        }
+                    }
+                    cards.Add(new CachedCard(id, name, price));
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error parsing Scryfall data: {ex.Message}");
+            }
+
+            string cachePath = Path.Combine(Path.GetDirectoryName(file) ?? string.Empty, "scryfall_prices.json");
+            await File.WriteAllTextAsync(cachePath, JsonSerializer.Serialize(cards));
         }
 
         public async Task InitializeAsync()
         {
+            string _cacheFile = Path.Combine(Directory.GetCurrentDirectory(), "scryfall_prices.json");
             if (File.Exists(_cacheFile))
             {
                 try
@@ -38,6 +94,7 @@ namespace CardCrawler.Scryfall
                 }
                 catch (Exception ex)
                 {
+                    Debug.WriteLine($"Error loading Scryfall cache: {ex.Message}");
                     // Ignore load errors
                 }
             }
@@ -58,7 +115,7 @@ namespace CardCrawler.Scryfall
 
             // Fast local lookup
             string key = cardName.ToLowerInvariant().Trim();
-            if (_pricesByName.TryGetValue(key, out decimal cachedPrice))
+            if (_pricesByName.TryGetValue(key, out decimal? cachedPrice))
             {
                 // Create a minimal card data from cache
                 // Note: valid URL is harder without storing it, but we can generate a search URL
@@ -75,7 +132,6 @@ namespace CardCrawler.Scryfall
             };
             client.DefaultRequestHeaders.Add("User-Agent", "CardCrawler/1.0");
             client.DefaultRequestHeaders.Add("Accept", "application/json;q=0.9,*/*;q=0.8");
-
 
             DateTime nextRequest = LastRequest + TimeSpan.FromMilliseconds(100);
             double wait = (nextRequest - DateTime.Now).TotalMilliseconds;
@@ -123,4 +179,5 @@ namespace CardCrawler.Scryfall
             return card;
         }
     }
+
 }

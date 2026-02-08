@@ -50,7 +50,7 @@ namespace CardCrawler
             string tr = "┐";
             string bl = "└";
             string br = "┘";
-            string h = "─";
+            char h = '─';
             string v = "│";
             string t = "┬";
             string b = "┴";
@@ -60,9 +60,9 @@ namespace CardCrawler
             Console.ResetColor();
 
             // Top border
-            Console.Write(tl + new string('─', 4) + t + new string('─', countW) + t + new string('─', nameW) + t + new string('─', unitPriceW) + t + new string('─', totalPriceW));
+            Console.Write(tl + new string(h, 4) + t + new string(h, countW) + t + new string(h, nameW) + t + new string(h, unitPriceW) + t + new string(h, totalPriceW));
             if (showInfo)
-                Console.Write(t + new string('─', infoW));
+                Console.Write(t + new string(h, infoW));
             Console.WriteLine(tr);
 
             // Header Row
@@ -72,9 +72,9 @@ namespace CardCrawler
             Console.WriteLine(v);
 
             // Separator
-            Console.Write(x.PadLeft(1, '├') + new string('─', 4) + x + new string('─', countW) + x + new string('─', nameW) + x + new string('─', unitPriceW) + x + new string('─', totalPriceW));
+            Console.Write(x.PadLeft(1, '├') + new string(h, 4) + x + new string(h, countW) + x + new string(h, nameW) + x + new string(h, unitPriceW) + x + new string(h, totalPriceW));
             if (showInfo)
-                Console.Write(x + new string('─', infoW));
+                Console.Write(x + new string(h, infoW));
             Console.WriteLine("┤");
 
             foreach (StatusEntry e in list)
@@ -107,9 +107,9 @@ namespace CardCrawler
             }
 
             // Bottom border
-            Console.Write(bl + new string('─', 4) + b + new string('─', countW) + b + new string('─', nameW) + b + new string('─', unitPriceW) + b + new string('─', totalPriceW));
+            Console.Write(bl + new string(h, 4) + b + new string(h, countW) + b + new string(h, nameW) + b + new string(h, unitPriceW) + b + new string(h, totalPriceW));
             if (showInfo)
-                Console.Write(b + new string('─', infoW));
+                Console.Write(b + new string(h, infoW));
             Console.WriteLine(br);
 
             int totalCards = list.Sum(e => e.Count);
@@ -152,7 +152,7 @@ namespace CardCrawler
             Console.Write($"↪ Fetching: {cleanName}".PadRight(Console.WindowWidth));
         }
 
-        public static void PrintStatusResult(StatusEntry entry, string originalName, int resultLine)
+        public static void PrintStatusResult(StatusEntry entry, int resultLine)
         {
             string displayName = entry.Name;
             string priceStr = entry.TotalPrice > 0 ? $"{entry.TotalPrice:0.00}€" : "-.--€";
