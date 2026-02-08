@@ -22,7 +22,6 @@ namespace CardCrawler.Browser
                 ]
         };
 
-
         private static IBrowser? browser;
         private static IPage? page;
         /// <summary>

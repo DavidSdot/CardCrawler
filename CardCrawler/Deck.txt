@@ -11,6 +11,8 @@
 1 Tormod's Crypt (DMR) 235
 1 Revitalizing Repast // Old-Growth Grove (MH3) 256
 1 Arcane Laboratory
+1 Ponder
+1 Goblin War Drums
 
 1 Ayara's Oathsworn
 1 Basri Ket
@@ -33,3 +35,4 @@
 1 White Knight
 1 Wintermoor Commander
 1 Worthy Knight
+

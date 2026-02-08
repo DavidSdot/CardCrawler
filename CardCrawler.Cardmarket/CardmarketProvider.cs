@@ -1,21 +1,21 @@
-﻿using System;
-using CardCrawler.Browser;
+﻿using CardCrawler.Browser;
+using CardCrawler.Cardmarket.Models;
+using CardCrawler.Core;
 using CardCrawler.Core.Interfaces;
 using CardCrawler.Core.Models;
-
 using HtmlAgilityPack;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Web;
-using System.IO;
-using System.Collections.Generic;
 
 namespace CardCrawler.Cardmarket
 {
-
-    public class CardMarketProvider : ICardDataProvider
+    public class CardMarketProvider : BaseCardProvider
     {
         public const string BaseUrl = "https://www.cardmarket.com";
         public const string CardUrl = BaseUrl + "/en/Magic/Cards/";
@@ -28,37 +28,15 @@ namespace CardCrawler.Cardmarket
             "language=1,3"
         ];
 
-        public string SourceName => "Cardmarket";
+        public override string SourceName => "Cardmarket";
 
-        private Dictionary<string, decimal?> _pricesByName = [];
-        private readonly string _cacheFile = "cardmarket_prices.json";
-
-        public async Task InitializeAsync()
+        public CardMarketProvider() : base("cardmarket_prices.json")
         {
-            if (File.Exists(_cacheFile))
-            {
-                try
-                {
-                    string content = await File.ReadAllTextAsync(_cacheFile);
-                    List<CachedCard>? data = System.Text.Json.JsonSerializer.Deserialize<List<CachedCard>>(content);
-                    if (data != null)
-                    {
-                        _pricesByName = data
-                            .Where(c => !string.IsNullOrWhiteSpace(c.Name) && c.Price.HasValue && c.Price.Value > 0)
-                            .GroupBy(c => c.Name.ToLowerInvariant().Trim())
-                            .ToDictionary(g => g.Key, g => g.Min(c => c.Price));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Debug.WriteLine($"Error loading Cardmarket cache: {ex.Message}");
-                }
-            }
         }
 
-        public async Task<bool> CheckConnection()
+        public override async Task<bool> CheckConnection()
         {
-            if (_pricesByName.Count > 0)
+            if (await base.CheckConnection())
             {
                 return true;
             }
@@ -73,7 +51,7 @@ namespace CardCrawler.Cardmarket
             }
         }
 
-        public async Task UpdateLocalCardData()
+        public override async Task UpdateLocalCardData()
         {
             string dir = Directory.GetCurrentDirectory();
             string productsFile = Path.Combine(dir, "products_singles_1.json");
@@ -89,11 +67,11 @@ namespace CardCrawler.Cardmarket
 
             Console.WriteLine("Reading products...");
             string productsJson = await File.ReadAllTextAsync(productsFile);
-            var productData = System.Text.Json.JsonSerializer.Deserialize<Models.CardMarketProductResponse>(productsJson, jOptions);
+            CardMarketProductResponse? productData = System.Text.Json.JsonSerializer.Deserialize<CardMarketProductResponse>(productsJson, jOptions);
 
             Console.WriteLine("Reading prices...");
             string pricesJson = await File.ReadAllTextAsync(priceFile);
-            var priceData = System.Text.Json.JsonSerializer.Deserialize<Models.CardMarketPriceResponse>(pricesJson, jOptions);
+            CardMarketPriceResponse? priceData = System.Text.Json.JsonSerializer.Deserialize<CardMarketPriceResponse>(pricesJson, jOptions);
 
             if (productData?.Products == null || priceData?.PriceGuides == null)
             {
@@ -101,23 +79,22 @@ namespace CardCrawler.Cardmarket
                 return;
             }
 
-            Dictionary<int, decimal?> priceLookup = priceData.PriceGuides.ToDictionary(p => p.IdProduct, p => p.Trend);
+            Dictionary<int, CardMarketPriceGuide> priceLookup = priceData.PriceGuides.ToDictionary(p => p.IdProduct, p => p);
             List<CachedCard> cards = [];
 
             foreach (var product in productData.Products)
             {
-                if (priceLookup.TryGetValue(product.IdProduct, out decimal? price))
+                if (priceLookup.TryGetValue(product.IdProduct, out CardMarketPriceGuide? priceGuide))
                 {
-                    cards.Add(new CachedCard(product.IdProduct.ToString(), product.Name ?? "Unknown", price));
+                    cards.Add(new CachedCard(product.IdProduct.ToString(), product.Name ?? "Unknown", priceGuide.BestPrice()));
                 }
             }
 
-            string cachePath = Path.Combine(Directory.GetCurrentDirectory(), "cardmarket_prices.json");
-            await File.WriteAllTextAsync(cachePath, System.Text.Json.JsonSerializer.Serialize(cards));
-            Console.WriteLine($"Merged {cards.Count} cards to {cachePath}");
+            await File.WriteAllTextAsync(_cacheFile, System.Text.Json.JsonSerializer.Serialize(cards));
+            Console.WriteLine($"Merged {cards.Count} cards to {_cacheFile}");
         }
 
-        public async Task<CardData?> GetCardData(string cardName)
+        public override async Task<CardData?> GetCardData(string cardName)
         {
             CardData card = new(cardName);
             string urlName = Utilities.UrlEncodeCardName(card.Name);
@@ -126,7 +103,7 @@ namespace CardCrawler.Cardmarket
             string key = cardName.ToLowerInvariant().Trim();
             if (_pricesByName.TryGetValue(key, out decimal? cachedPrice))
             {
-                Debug.WriteLine($"_pricesByName{key}:{cachedPrice}");
+                Debug.WriteLine($"_pricesByName:{key} > {cachedPrice}");
                 return new CardData(cardName)
                 {
                     PriceTrend = cachedPrice,

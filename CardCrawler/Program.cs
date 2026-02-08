@@ -19,6 +19,7 @@ namespace CardCrawler
         private static async Task Main(string[] args)
         {
             Console.OutputEncoding = Encoding.UTF8;
+            Console.Clear();
 #if !DEBUG
             ConsoleUi.ShowBanner();
 #endif
@@ -32,7 +33,6 @@ namespace CardCrawler
 
             // 1. Initialize Provider
             ICardDataProvider provider;
-            string scryfallCachePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "scryfall_prices.json");
 
             // Allow fallback if needed, but ScryfallProvider handles missing file by just not loading cache.
 
