@@ -192,7 +192,7 @@ namespace CardCrawler
 
             if (!string.IsNullOrWhiteSpace(options.OutputPath))
             {
-                await CsvExporter.SaveCsvAsync(options.OutputPath, statusList, total, options.BudgetLimit);
+                await CsvExporter.SaveCsvAsync(options, statusList, total);
                 Console.WriteLine($"\nSaved CSV to {options.OutputPath}");
             }
         }

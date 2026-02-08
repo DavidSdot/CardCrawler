@@ -10,7 +10,7 @@
     },
     "cardmarket: read deck": {
       "commandName": "Project",
-      "commandLineArgs": "Deck.txt --limit=1.00 --datasource=cardmarket"
+      "commandLineArgs": "Deck.txt Prices_cm.txt --limit=1.00 --datasource=cardmarket"
     },
     "cardmarket: update-cache": {
       "commandName": "Project",
