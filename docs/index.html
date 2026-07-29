@@ -44,7 +44,7 @@
         }
 
         .container {
-            max-width: 1000px;
+            max-width: 1050px;
             margin: 0 auto;
         }
 
@@ -79,6 +79,7 @@
         }
 
         .badge-info { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-commander { background: rgba(6, 182, 212, 0.22); color: #67e8f9; border: 1px solid rgba(6, 182, 212, 0.4); }
         .badge-success { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3); }
         .badge-warning { background: rgba(249, 115, 22, 0.25); color: #fdba74; border: 1px solid rgba(249, 115, 22, 0.4); }
         .badge-fuzzy { background: rgba(234, 179, 8, 0.22); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.4); }
@@ -108,7 +109,7 @@
 
         textarea {
             width: 100%;
-            height: 220px;
+            height: 240px;
             background: rgba(15, 23, 42, 0.6);
             border: 1px solid var(--card-border);
             border-radius: var(--radius-md);
@@ -255,6 +256,11 @@
         }
 
         /* REIHEN-HERVORHEBUNGEN */
+        .row-commander {
+            background: rgba(6, 182, 212, 0.1) !important;
+            border-left: 4px solid var(--accent);
+        }
+
         .row-missing {
             background: rgba(239, 68, 68, 0.14) !important;
             border-left: 4px solid var(--danger);
@@ -320,8 +326,8 @@
         <div id="config-info-bar" style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 1rem;"></div>
 
         <div class="input-group" style="margin-bottom: 1rem;">
-            <label for="deck-input">Deckliste eingeben/einfügen (z. B. <code>4 Insult</code>, <code>1 Sol Ring</code>):</label>
-            <textarea id="deck-input" placeholder="4 Insult&#10;1 Sol Ring&#10;3 Forest&#10;1 Black Lotus"></textarea>
+            <label for="deck-input">Deckliste eingeben/einfügen (z. B. <code>1x Light-Paws, Emperor's Voice (neo) 25 [Commander{top}]</code> oder Moxfield/ManaBox Exporte):</label>
+            <textarea id="deck-input" placeholder="1x Light-Paws, Emperor's Voice (neo) 25 [Commander{top}]&#10;1x All That Glitters (pip) 155 [Enchantment]&#10;38x Plains (msh) 287 [Land]"></textarea>
         </div>
 
         <div id="fallback-picker" style="display: none; margin-bottom: 1rem;">
@@ -376,7 +382,7 @@
                         <th>Zugeordnete Karte (DB)</th>
                         <th style="width: 110px; text-align: right;">Stückpreis</th>
                         <th style="width: 110px; text-align: right;">Gesamt</th>
-                        <th style="width: 200px;">Status / Hinweis</th>
+                        <th style="width: 220px;">Status / Hinweis</th>
                     </tr>
                 </thead>
                 <tbody id="results-tbody">
@@ -415,7 +421,7 @@
     const cacheStatusBadge = document.getElementById('cache-status-badge');
     const fallbackPicker = document.getElementById('fallback-picker');
 
-    // Set Subtitles on Load
+    // Set Subtitles & Config Badges on Load
     window.addEventListener('DOMContentLoaded', async () => {
         renderConfigBadges();
 
@@ -624,6 +630,7 @@
         return null;
     }
 
+    // Flexible Card Line Parser (Moxfield, Archidekt, Scryfall, ManaBox)
     function parseCardLine(line) {
         line = line.trim();
         if (!line) return null;
@@ -635,21 +642,27 @@
             line = line.substring(countMatch[0].length).trim();
         }
 
+        // Commander-Tag in der Zeile prüfen (z. B. [Commander{top}], [Commander])
+        const isCommanderTag = /\[Commander/i.test(line);
+
         let cleanName = line;
 
-        // 1. Remove foil/edition tags at the end (*F*, *E*, *Etched*, etc.)
+        // 1. Klammern mit Typ/Commander-Tags am Ende entfernen (z. B. [Creature], [Enchantment], [Commander{top}])
+        cleanName = cleanName.replace(/\s*\[[^\]]+\]\s*$/gi, '').trim();
+
+        // 2. Foil/Edition-Tags am Ende entfernen (*F*, *E*, *Etched*, etc.)
         cleanName = cleanName.replace(/\s+\*[A-Za-z0-9_*]+\*\s*$/gi, '').trim();
 
-        // 2. Remove Set Code + Collector Number at the end, e.g. " (DMU) 297", " [MH2] 6", " (PLST) JUD-5"
+        // 3. Set-Code + Sammlernummer am Ende entfernen (z. B. "(neo) 25", "(soc) 132", "(plst) SHM-2")
         cleanName = cleanName.replace(/\s+[\(\[][A-Za-z0-9_\-\+]+[\)\]]\s+[A-Za-z0-9\-\/]+\s*$/gi, '').trim();
 
-        // 3. Remove standalone Set Code in parentheses/brackets at the end, e.g. " (DMU)", " [MH2]"
+        // 4. Einzelne Set-Codes in Klammern am Ende entfernen (z. B. "(neo)", "[MH2]")
         cleanName = cleanName.replace(/\s+[\(\[][A-Za-z0-9_\-\+]+[\)\]]\s*$/gi, '').trim();
 
-        // 4. Remove leftover collector numbers or tags at end if any, e.g. " #297"
+        // 5. Einzelne Sammlernummern oder Präfixe am Ende entfernen (z. B. "#297")
         cleanName = cleanName.replace(/\s+#[0-9A-Za-z\-]+\s*$/gi, '').trim();
 
-        return { count, name: cleanName };
+        return { count, name: cleanName, isCommanderTag };
     }
 
     function evaluateDeck() {
@@ -675,12 +688,13 @@
             "sideboard", "side", "companion", "maybeboard", "tokens"
         ]);
 
-        // Prüfen, ob explizit ein "Commander" Bereich in der Liste vorkommt
-        let hasExplicitCommanderSection = false;
+        // Vorab prüfen, ob explizit ein Commander-Tag [Commander...] oder Bereich "Commander" existiert
+        let hasExplicitCommander = false;
         for (let i = 0; i < lines.length; i++) {
-            let cleaned = lines[i].replace(/^(?:\/\/|#|\*|-)\s*/, '').trim().toLowerCase().replace(/:$/, '');
-            if (cleaned === "commander" || cleaned === "commanders") {
-                hasExplicitCommanderSection = true;
+            let raw = lines[i].trim();
+            let cleaned = raw.replace(/^(?:\/\/|#|\*|-)\s*/, '').trim().toLowerCase().replace(/:$/, '');
+            if (cleaned === "commander" || cleaned === "commanders" || /\[Commander/i.test(raw)) {
+                hasExplicitCommander = true;
                 break;
             }
         }
@@ -698,7 +712,7 @@
             let rawLine = lines[i].trim();
             if (!rawLine) continue;
 
-            // Filter out section header lines like "Commander", "Deck", "// Mainboard"
+            // Überschriften wie "Commander", "Deck", "// Mainboard" filtern
             let cleanedHeaderLine = rawLine.replace(/^(?:\/\/|#|\*|-)\s*/, '').trim().toLowerCase().replace(/:$/, '');
             if (sectionHeaders.has(cleanedHeaderLine)) {
                 if (cleanedHeaderLine === "commander" || cleanedHeaderLine === "commanders") {
@@ -717,10 +731,13 @@
             const count = parsed.count;
             const key = cleanName.toLowerCase();
             
-            // Falls expliziter Bereich da -> Bereich nutzen. Sonst: 1. Karte ist der Commander!
-            const isCommander = hasExplicitCommanderSection 
-                ? (currentSection === "commander")
-                : (cardIndex === 0);
+            // Commander Logik:
+            // 1. Explicit Line Tag [Commander{top}]
+            // 2. Explicit Section Header "Commander"
+            // 3. Fallback: 1. Karte im Deck (falls nirgendwo anders ein Commander definiert wurde)
+            const isCommander = parsed.isCommanderTag 
+                || (currentSection === "commander")
+                || (!hasExplicitCommander && cardIndex === 0);
 
             cardIndex++;
 
@@ -839,7 +856,8 @@
             let badgesHtml = "";
 
             if (item.isCommander) {
-                badgesHtml += `<span class="badge badge-info" style="background: rgba(6,182,212,0.22); color: #67e8f9; border-color: rgba(6,182,212,0.4);">👑 Commander</span> `;
+                rowClass = "row-commander";
+                badgesHtml += `<span class="badge badge-commander">👑 Commander</span> `;
             }
 
             if (!item.found) {
@@ -848,7 +866,7 @@
                 badgesHtml += `<span class="badge badge-danger">✖ Nicht gefunden</span>`;
             } else {
                 if (item.isLimitExceeded) {
-                    rowClass = "row-limit-exceeded";
+                    if (!item.isCommander) rowClass = "row-limit-exceeded";
                     symStyle = "color: var(--accent-orange); font-weight: bold;";
                     badgesHtml += `<span class="badge badge-warning">⚠️ > €${CONFIG.priceLimit.toFixed(2)}</span> `;
                 }
