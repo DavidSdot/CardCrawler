@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CardCrawler - Cardmarket Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Direktes Einbinden als JS-Variable für 100% CORS-freies Laden auf file:// -->
+    <script src="cardmarket_prices.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --card-border: #334155;
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --accent: #06b6d4;
+            --accent-orange: #f97316;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success: #22c55e;
+            --warning: #eab308;
+            --danger: #ef4444;
+            --radius-lg: 16px;
+            --radius-md: 10px;
+            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #f97316 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-info { background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .badge-success { background: rgba(34, 197, 94, 0.2); color: #86efac; border: 1px solid rgba(34, 197, 94, 0.3); }
+        .badge-warning { background: rgba(234, 179, 8, 0.2); color: #fde047; border: 1px solid rgba(234, 179, 8, 0.3); }
+        .badge-danger { background: rgba(239, 68, 68, 0.2); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 900px) {
+            .grid {
+                grid-template-columns: 320px 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: border-color 0.2s;
+        }
+
+        .panel-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-main);
+        }
+
+        .status-box {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            padding: 1.2rem;
+            margin-top: 0.5rem;
+        }
+
+        .status-box p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            padding: 0.8rem;
+            font-family: monospace;
+            font-size: 0.9rem;
+            resize: vertical;
+        }
+
+        textarea:focus, input[type="number"]:focus, input[type="text"]:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .input-group label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .input-group input {
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            color: var(--text-main);
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: var(--radius-md);
+            padding: 0.75rem 1.5rem;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-orange {
+            background: var(--accent-orange);
+        }
+        .btn-orange:hover {
+            background: #ea580c;
+        }
+
+        .btn-secondary {
+            background: #334155;
+            color: var(--text-main);
+        }
+        .btn-secondary:hover {
+            background: #475569;
+        }
+
+        .stats-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .stat-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--card-border);
+            background: var(--card-bg);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--card-border);
+        }
+
+        th {
+            background: rgba(15, 23, 42, 0.8);
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        tbody tr:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-cell {
+            text-align: center;
+            font-size: 1.1rem;
+        }
+
+        .search-bar-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .search-bar-row input {
+            max-width: 300px;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 3rem;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>CardCrawler Web</h1>
+        <p>Automatische Cardmarket Preisberechnung & Deck-Evaluierung</p>
+    </header>
+
+    <div class="grid">
+        <!-- Left Panel: Cardmarket JSON Status -->
+        <div class="panel">
+            <div class="panel-title">
+                📁 Datenquelle
+            </div>
+            
+            <div class="status-box">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                    <span style="font-size: 0.85rem; font-weight: 600;">cardmarket_prices.json</span>
+                    <span id="cache-status-badge" class="badge badge-warning">Lade...</span>
+                </div>
+
+                <p id="status-message">Die Datei <code>cardmarket_prices.json</code> wird geladen.</p>
+
+                <div id="fallback-picker" style="display: none; margin-top: 0.75rem;">
+                    <button class="btn btn-secondary" style="font-size: 0.8rem; width: 100%;" onclick="document.getElementById('file-picker-input').click()">
+                        📁 cardmarket_prices.json wählen
+                    </button>
+                    <input type="file" id="file-picker-input" accept=".json" style="display:none;" onchange="handleManualFile(event)">
+                </div>
+
+                <div style="margin-top: 1rem; padding-top: 0.75rem; border-top: 1px solid var(--card-border); font-size: 0.85rem;">
+                    Geladene Karten: <strong id="card-count-val" style="color: var(--text-main);">0</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel: Deck List -->
+        <div class="panel">
+            <div class="panel-title">
+                📝 Deckliste
+            </div>
+
+            <div class="input-group" style="margin-bottom: 1rem;">
+                <label for="deck-input">Deckliste eingeben/einfügen (z. B. <code>4 Lightning Bolt</code> oder <code>1 Sol Ring</code>):</label>
+                <textarea id="deck-input" placeholder="4 Lightning Bolt&#10;1 Sol Ring&#10;3 Forest&#10;1 Black Lotus"></textarea>
+            </div>
+
+            <button class="btn btn-orange" id="btn-evaluate" style="width: 100%; margin-top: 1rem;" onclick="evaluateDeck()">
+                🚀 Deck-Preise Berechnen
+            </button>
+        </div>
+    </div>
+
+    <!-- STATS & RESULTS -->
+    <div id="results-container" style="display: none;">
+        <div class="stats-summary">
+            <div class="stat-card">
+                <div class="stat-val" id="stat-total-price">€0.00</div>
+                <div class="stat-label">Gesamtkosten Deck</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="stat-found-count" style="color: var(--success);">0 / 0</div>
+                <div class="stat-label">Karten Gefunden</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="stat-excluded-count" style="color: var(--warning);">0</div>
+                <div class="stat-label">Ignorierte Karten</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" id="stat-avg-price" style="color: #60a5fa;">€0.00</div>
+                <div class="stat-label">Ø Preis / Karte</div>
+            </div>
+        </div>
+
+        <div id="budget-alert" style="display: none; margin-bottom: 1rem;" class="badge badge-danger">
+            ⚠️ Gesamtbudget überschritten!
+        </div>
+
+        <div class="search-bar-row">
+            <input type="text" id="table-search" class="input-group" placeholder="Ergebnisse filtern..." oninput="filterResultsTable()">
+            <button class="btn btn-secondary" onclick="exportCSV()">📥 Als CSV exportieren</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 50px; text-align: center;">Status</th>
+                        <th style="width: 60px; text-align: center;">Anz.</th>
+                        <th>Kartenname</th>
+                        <th style="width: 120px; text-align: right;">Stückpreis (€)</th>
+                        <th style="width: 120px; text-align: right;">Gesamt (€)</th>
+                        <th style="width: 160px;">Info</th>
+                    </tr>
+                </thead>
+                <tbody id="results-tbody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <footer class="footer">
+        Antigravity CardCrawler Web &bull; Feste Einbindung von cardmarket_prices.json
+    </footer>
+</div>
+
+<script>
+    // ZENTRALE KONFIGURATION
+    const CONFIG = {
+        priceLimit: 5.00,        // Einzelkarten Limit in € (Karten über 5,00 € werden markiert)
+        excludeBasics: false,    // Standardländer ignorieren (false = aus)
+        excludeFirstCard: false, // 1. Karte ignorieren (false = aus)
+        budgetLimit: 0,          // Gesamtbudget Limit in € (0 = deaktiviert/leer)
+        customExcludedCards: []  // Eigene Ausschlussliste (leer)
+    };
+
+    // State
+    const cardDatabase = new Map(); // lowercase name -> price decimal
+    const basicLands = new Set(["Forest", "Island", "Mountain", "Plains", "Swamp"]);
+    let currentResults = [];
+
+    // Elements
+    const cacheStatusBadge = document.getElementById('cache-status-badge');
+    const cardCountVal = document.getElementById('card-count-val');
+    const statusMessage = document.getElementById('status-message');
+    const fallbackPicker = document.getElementById('fallback-picker');
+
+    // Auto-load cardmarket_prices on DOMContentLoaded
+    window.addEventListener('DOMContentLoaded', async () => {
+        // Priority 1: Check window.CARDMARKET_PRICES (loaded via <script src="cardmarket_prices.js">)
+        if (window.CARDMARKET_PRICES && Array.isArray(window.CARDMARKET_PRICES) && window.CARDMARKET_PRICES.length > 0) {
+            console.log("Geladen via JS-Script Tag:", window.CARDMARKET_PRICES.length);
+            processLoadedJson(window.CARDMARKET_PRICES);
+            return;
+        }
+
+        // Priority 2: Try fetch('./cardmarket_prices.json')
+        try {
+            const response = await fetch('./cardmarket_prices.json');
+            if (response.ok) {
+                const data = await response.json();
+                processLoadedJson(data);
+                return;
+            }
+        } catch (err) {
+            console.warn("Fetch schlug fehl (CORS/file://-Schutz), versuche LocalStorage:", err);
+        }
+
+        // Priority 3: Try LocalStorage cache
+        const savedCache = localStorage.getItem('cardmarket_prices_cache');
+        if (savedCache) {
+            try {
+                const parsed = JSON.parse(savedCache);
+                processLoadedMap(parsed);
+                cacheStatusBadge.textContent = "Cache Bereit";
+                cacheStatusBadge.className = "badge badge-success";
+                statusMessage.innerHTML = `Aus lokalem Cache geladen (<span style="color: var(--success); font-weight: 600;">${cardDatabase.size.toLocaleString()} Karten</span>).`;
+                return;
+            } catch (e) {
+                console.error("Cache parsing error", e);
+            }
+        }
+
+        // Priority 4: Show fallback 1-click file selector
+        cacheStatusBadge.textContent = "Nicht geladen";
+        cacheStatusBadge.className = "badge badge-danger";
+        statusMessage.innerHTML = `<span style="color: var(--danger);">Browser blockiert automatischen Datei-Fetch (CORS file://-Regel).</span><br><small style="color: var(--text-muted);">Klicke unten, um die Datei <code>cardmarket_prices.json</code> einmalig im Browser auszuwählen:</small>`;
+        fallbackPicker.style.display = 'block';
+    });
+
+    async function handleManualFile(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        try {
+            const text = await file.text();
+            const json = JSON.parse(text);
+            processLoadedJson(json);
+            fallbackPicker.style.display = 'none';
+        } catch (err) {
+            alert("Fehler beim Lesen der Datei: " + err.message);
+        }
+    }
+
+    function processLoadedJson(json) {
+        const mapObj = {};
+        if (Array.isArray(json)) {
+            json.forEach(item => {
+                const cardName = item.name || item.Name;
+                const price = item.price ?? item.Price ?? item.trend ?? item.Trend;
+                if (cardName && price != null) {
+                    const key = cardName.toLowerCase().trim();
+                    if (!mapObj[key] || price < mapObj[key]) {
+                        mapObj[key] = parseFloat(price);
+                    }
+                }
+            });
+        } else if (json && typeof json === 'object') {
+            for (const [k, v] of Object.entries(json)) {
+                if (v != null) {
+                    mapObj[k.toLowerCase().trim()] = parseFloat(v);
+                }
+            }
+        }
+        processLoadedMap(mapObj);
+        
+        cacheStatusBadge.textContent = "Aktiv";
+        cacheStatusBadge.className = "badge badge-success";
+        statusMessage.innerHTML = `<code>cardmarket_prices.json</code> erfolgreich geladen (<span style="color: var(--success); font-weight: 600;">${cardDatabase.size.toLocaleString()} Karten</span>).`;
+    }
+
+    function processLoadedMap(mapObj) {
+        cardDatabase.clear();
+        for (const [k, v] of Object.entries(mapObj)) {
+            cardDatabase.set(k, v);
+        }
+        cardCountVal.textContent = cardDatabase.size.toLocaleString();
+
+        try {
+            localStorage.setItem('cardmarket_prices_cache', JSON.stringify(mapObj));
+        } catch (e) {
+            console.log("LocalStorage Limit erreicht oder deaktiviert.");
+        }
+    }
+
+    // Parse Card Line
+    function parseCardLine(line) {
+        line = line.trim();
+        if (!line) return null;
+        const match = line.match(/^(?:(\d+)[xX]?\s+)?(.*?)(?:\s\(.*\))?$/);
+        if (!match) return { count: 1, name: line };
+
+        const count = match[1] ? parseInt(match[1], 10) : 1;
+        const name = match[2].trim();
+        return { count, name };
+    }
+
+    // Evaluate Deck
+    function evaluateDeck() {
+        const text = document.getElementById('deck-input').value;
+        const lines = text.split('\n').filter(l => l.trim().length > 0);
+
+        if (lines.length === 0) {
+            alert("Bitte gib eine Deckliste ein.");
+            return;
+        }
+
+        const optBasics = CONFIG.excludeBasics;
+        const optFirst = CONFIG.excludeFirstCard;
+        const priceLimit = CONFIG.priceLimit;
+        const budgetLimit = CONFIG.budgetLimit;
+
+        const excludeSet = new Set(
+            CONFIG.customExcludedCards.map(s => s.trim().toLowerCase()).filter(s => s.length > 0)
+        );
+
+        let totalPrice = 0;
+        let foundCount = 0;
+        let totalCount = lines.length;
+        let excludedCount = 0;
+        currentResults = [];
+
+        for (let i = 0; i < lines.length; i++) {
+            const parsed = parseCardLine(lines[i]);
+            if (!parsed) continue;
+
+            const cleanName = parsed.name;
+            const count = parsed.count;
+            const key = cleanName.toLowerCase();
+
+            const isBasic = basicLands.has(cleanName);
+            const isCustomExcluded = excludeSet.has(key);
+            const isFirstExcluded = (i === 0 && optFirst);
+
+            let include = true;
+            let info = "Enthalten";
+
+            if ((optBasics && isBasic) || isCustomExcluded || isFirstExcluded) {
+                include = false;
+                info = "Ignoriert";
+                excludedCount++;
+            }
+
+            const unitPrice = cardDatabase.get(key);
+            let rowTotal = 0;
+            let symbol = "✖";
+
+            if (unitPrice !== undefined) {
+                foundCount++;
+                rowTotal = unitPrice * count;
+                symbol = include ? "✔" : "~";
+                if (priceLimit > 0 && unitPrice > priceLimit) {
+                    info += " (Limit überschritten)";
+                }
+                if (include) {
+                    totalPrice += rowTotal;
+                }
+            } else {
+                symbol = "✖";
+                info = "Nicht gefunden";
+            }
+
+            currentResults.push({
+                symbol,
+                count,
+                name: cleanName,
+                unitPrice: unitPrice !== undefined ? unitPrice : 0,
+                rowTotal,
+                include,
+                info,
+                found: unitPrice !== undefined
+            });
+        }
+
+        renderResults(totalPrice, foundCount, totalCount, excludedCount, budgetLimit);
+    }
+
+    function renderResults(totalPrice, foundCount, totalCount, excludedCount, budgetLimit) {
+        document.getElementById('results-container').style.display = 'block';
+        document.getElementById('stat-total-price').textContent = `€${totalPrice.toFixed(2)}`;
+        document.getElementById('stat-found-count').textContent = `${foundCount} / ${totalCount}`;
+        document.getElementById('stat-excluded-count').textContent = excludedCount;
+        
+        const includedCardsFound = currentResults.filter(r => r.include && r.found);
+        const avg = includedCardsFound.length > 0 ? (totalPrice / includedCardsFound.length) : 0;
+        document.getElementById('stat-avg-price').textContent = `€${avg.toFixed(2)}`;
+
+        const budgetAlert = document.getElementById('budget-alert');
+        if (budgetLimit > 0 && totalPrice > budgetLimit) {
+            budgetAlert.style.display = 'inline-block';
+            budgetAlert.textContent = `⚠️ Gesamtbudget-Limit von €${budgetLimit.toFixed(2)} überschritten! (Aktuell: €${totalPrice.toFixed(2)})`;
+        } else {
+            budgetAlert.style.display = 'none';
+        }
+
+        renderResultsTable(currentResults);
+    }
+
+    function renderResultsTable(items) {
+        const tbody = document.getElementById('results-tbody');
+        tbody.innerHTML = '';
+
+        items.forEach(item => {
+            const tr = document.createElement('tr');
+
+            let symClass = item.symbol === '✔' ? 'color: var(--success);' :
+                           item.symbol === '~' ? 'color: var(--warning);' : 'color: var(--danger);';
+
+            tr.innerHTML = `
+                <td class="status-cell" style="${symClass}">${item.symbol}</td>
+                <td style="text-align: center; font-weight: 600;">${item.count}</td>
+                <td style="font-weight: 500;">${escapeHtml(item.name)}</td>
+                <td style="text-align: right;">${item.found ? '€' + item.unitPrice.toFixed(2) : '-'}</td>
+                <td style="text-align: right; font-weight: 600;">${item.found && item.include ? '€' + item.rowTotal.toFixed(2) : '-'}</td>
+                <td><span class="badge ${item.include ? 'badge-info' : 'badge-warning'}">${item.info}</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function filterResultsTable() {
+        const query = document.getElementById('table-search').value.toLowerCase();
+        const filtered = currentResults.filter(r => r.name.toLowerCase().includes(query) || r.info.toLowerCase().includes(query));
+        renderResultsTable(filtered);
+    }
+
+    function exportCSV() {
+        if (currentResults.length === 0) return;
+        let csv = "Status,Anzahl,Kartenname,Stueckpreis,Gesamtpreis,Info\n";
+        currentResults.forEach(r => {
+            csv += `"${r.symbol}",${r.count},"${r.name.replace(/"/g, '""')}",${r.unitPrice.toFixed(2)},${r.rowTotal.toFixed(2)},"${r.info}"\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'cardmarket_deck_bewertung.csv';
+        a.click();
+    }
+
+    function escapeHtml(str) {
+        return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    }
+</script>
+
+</body>
+</html>
