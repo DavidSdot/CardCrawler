@@ -32,7 +32,33 @@ namespace CardCrawler.Core
                 try
                 {
                     string content = await File.ReadAllTextAsync(_cacheFile);
-                    List<CachedCard>? data = JsonSerializer.Deserialize<List<CachedCard>>(content);
+                    List<CachedCard>? data = null;
+
+                    try
+                    {
+                        data = JsonSerializer.Deserialize<List<CachedCard>>(content);
+                    }
+                    catch
+                    {
+                        // Fallback: Try parsing compact JSON array format [["Name", price], ...]
+                        using var doc = JsonDocument.Parse(content);
+                        if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                        {
+                            data = [];
+                            foreach (var elem in doc.RootElement.EnumerateArray())
+                            {
+                                if (elem.ValueKind == JsonValueKind.Array && elem.GetArrayLength() >= 2)
+                                {
+                                    string? name = elem[0].GetString();
+                                    if (!string.IsNullOrWhiteSpace(name) && elem[1].TryGetDecimal(out decimal price))
+                                    {
+                                        data.Add(new CachedCard("", name, price));
+                                    }
+                                }
+                            }
+                        }
+                    }
+
                     if (data != null)
                     {
                         var validData = data.Where(c => !string.IsNullOrWhiteSpace(c.Name));

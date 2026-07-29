@@ -1,4 +1,4 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace CardCrawler.Cardmarket
@@ -23,18 +23,23 @@ namespace CardCrawler.Cardmarket
         public static (int Count, string Name) ParseCardLine(string line)
         {
             line = line.Replace("\uFEFF", "").Trim();
-            Match match = CardLineParsingRegex().Match(line);
-
-            string name = match.Groups["name"].Value;
-            string countStr = match.Groups["count"].Value;
+            if (string.IsNullOrWhiteSpace(line)) return (1, string.Empty);
 
             int count = 1;
-            if (!string.IsNullOrEmpty(countStr) && int.TryParse(countStr, out int c))
+            Match countMatch = Regex.Match(line, @"^(?:(?<count>\d+)[xX]?\s+)");
+            if (countMatch.Success && int.TryParse(countMatch.Groups["count"].Value, out int c))
             {
                 count = c;
+                line = line[countMatch.Length..].Trim();
             }
 
-            return (count, name);
+            string cleanName = line;
+            cleanName = Regex.Replace(cleanName, @"\s+\*[A-Za-z0-9_*]+\*\s*$", "", RegexOptions.IgnoreCase).Trim();
+            cleanName = Regex.Replace(cleanName, @"\s+[\(\[][A-Za-z0-9_\-\+]+[\)\]]\s+[A-Za-z0-9\-\/]+\s*$", "", RegexOptions.IgnoreCase).Trim();
+            cleanName = Regex.Replace(cleanName, @"\s+[\(\[][A-Za-z0-9_\-\+]+[\)\]]\s*$", "", RegexOptions.IgnoreCase).Trim();
+            cleanName = Regex.Replace(cleanName, @"\s+#[0-9A-Za-z\-]+\s*$", "", RegexOptions.IgnoreCase).Trim();
+
+            return (count, cleanName);
         }
 
         public static string UrlEncodeCardName(string cardName)
