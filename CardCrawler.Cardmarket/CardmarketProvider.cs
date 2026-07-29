@@ -1,4 +1,4 @@
-﻿using CardCrawler.Browser;
+using CardCrawler.Browser;
 using CardCrawler.Cardmarket.Models;
 using CardCrawler.Core;
 using CardCrawler.Core.Interfaces;
@@ -91,7 +91,12 @@ namespace CardCrawler.Cardmarket
             }
 
             await File.WriteAllTextAsync(_cacheFile, System.Text.Json.JsonSerializer.Serialize(cards));
-            Console.WriteLine($"Merged {cards.Count} cards to {_cacheFile}");
+            string jsFile = Path.Combine(Path.GetDirectoryName(_cacheFile) ?? "", "cardmarket_prices.js");
+            var compactList = cards
+                .Where(c => !string.IsNullOrWhiteSpace(c.Name) && c.Price.HasValue && c.Price.Value > 0)
+                .Select(c => new object[] { c.Name, c.Price!.Value });
+            await File.WriteAllTextAsync(jsFile, "window.CARDMARKET_PRICES=" + System.Text.Json.JsonSerializer.Serialize(compactList) + ";");
+            Console.WriteLine($"Merged {cards.Count} cards to {_cacheFile} and compact cardmarket_prices.js");
         }
 
         public override async Task<CardData?> GetCardData(string cardName)
