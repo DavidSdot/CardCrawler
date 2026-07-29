@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>CardCrawler Web</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -305,6 +308,20 @@
             font-size: 0.85rem;
             color: var(--text-muted);
         }
+
+        /* PRINT / PDF COMPATIBILITY */
+        @media print {
+            body { background: white !important; color: black !important; padding: 0 !important; }
+            .container { max-width: 100% !important; }
+            .btn, #fallback-picker, .search-bar-row input, #deck-input, label[for="deck-input"], .footer { display: none !important; }
+            .panel { background: white !important; border: 1px solid #ccc !important; box-shadow: none !important; }
+            .stat-card { background: white !important; border: 1px solid #ccc !important; }
+            .stat-val { color: #000 !important; }
+            .table-wrapper { border: 1px solid #ccc !important; }
+            th { background: #eee !important; color: black !important; }
+            td { color: black !important; }
+            header h1 { background: none !important; -webkit-text-fill-color: black !important; color: black !important; }
+        }
     </style>
 </head>
 <body>
@@ -337,9 +354,14 @@
             <input type="file" id="file-picker-input" accept=".json" style="display:none;" onchange="handleManualFile(event)">
         </div>
 
-        <button class="btn btn-orange" id="btn-evaluate" style="width: 100%;" onclick="evaluateDeck()">
-            🚀 Deck-Preise Berechnen
-        </button>
+        <div style="display: flex; gap: 0.5rem;">
+            <button class="btn btn-orange" id="btn-evaluate" style="flex: 1;" onclick="evaluateDeck()">
+                🚀 Deck-Preise Berechnen
+            </button>
+            <button class="btn btn-secondary" style="font-size: 0.85rem;" onclick="clearDeckInput()" title="Textfeld leeren">
+                🗑️ Leeren
+            </button>
+        </div>
     </div>
 
     <!-- STATS & RESULTS -->
@@ -369,7 +391,10 @@
 
         <div class="search-bar-row">
             <input type="text" id="table-search" class="input-group" placeholder="Ergebnisse filtern..." oninput="filterResultsTable()">
-            <button class="btn btn-secondary" onclick="exportCSV()">📥 Als CSV exportieren</button>
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-secondary" onclick="copySummaryToClipboard()">📋 Zusammenfassung</button>
+                <button class="btn btn-secondary" onclick="exportCSV()">📥 CSV Export</button>
+            </div>
         </div>
 
         <div class="table-wrapper">
@@ -425,12 +450,39 @@
     window.addEventListener('DOMContentLoaded', async () => {
         renderConfigBadges();
 
+        // Deckliste im LocalStorage zwischenspeichern & wiederherstellen
+        const deckInput = document.getElementById('deck-input');
+        if (deckInput) {
+            const savedDeck = localStorage.getItem('cardcrawler_saved_deck');
+            if (savedDeck) {
+                deckInput.value = savedDeck;
+            }
+            deckInput.addEventListener('input', () => {
+                localStorage.setItem('cardcrawler_saved_deck', deckInput.value);
+            });
+        }
+
         if (CONFIG.subtitleLine1) {
             document.getElementById('header-sub1').textContent = CONFIG.subtitleLine1;
         }
         if (CONFIG.subtitleLine2) {
             document.getElementById('header-sub2').textContent = CONFIG.subtitleLine2;
         }
+
+        // Auto-Reload / Live-Prüfung wenn man zum Browser-Tab zurückkehrt
+        window.addEventListener('focus', async () => {
+            try {
+                const res = await fetch('./cardmarket_prices.js?t=' + Date.now(), { cache: 'no-store' });
+                if (res.ok) {
+                    const text = await res.text();
+                    if (window.lastJsContent && window.lastJsContent !== text) {
+                        console.log("Neue Preisdaten erkannt! Seite wird aktualisiert...");
+                        window.location.reload();
+                    }
+                    window.lastJsContent = text;
+                }
+            } catch (e) {}
+        });
 
         // Priority 1: Check window.CARDMARKET_PRICES (loaded via <script src="cardmarket_prices.js">)
         if (window.CARDMARKET_PRICES && Array.isArray(window.CARDMARKET_PRICES) && window.CARDMARKET_PRICES.length > 0) {
@@ -553,6 +605,44 @@
         } catch (e) {
             console.log("LocalStorage Limit erreicht oder deaktiviert.");
         }
+
+        // Automatische Berechnung ausführen, falls bereits Text vorhanden ist
+        const deckInput = document.getElementById('deck-input');
+        if (deckInput && deckInput.value.trim().length > 0) {
+            evaluateDeck();
+        }
+    }
+
+    function clearDeckInput() {
+        const deckInput = document.getElementById('deck-input');
+        if (deckInput) {
+            deckInput.value = '';
+            localStorage.removeItem('cardcrawler_saved_deck');
+            document.getElementById('results-container').style.display = 'none';
+        }
+    }
+
+    function copySummaryToClipboard() {
+        if (!currentResults || currentResults.length === 0) return;
+        
+        const total = document.getElementById('stat-total-price').textContent;
+        const found = document.getElementById('stat-found-count').textContent;
+        const alerts = document.getElementById('stat-alert-count').textContent;
+        const avg = document.getElementById('stat-avg-price').textContent;
+
+        const sub1 = CONFIG.subtitleLine1 ? `\n${CONFIG.subtitleLine1}` : '';
+        const sub2 = CONFIG.subtitleLine2 ? ` - ${CONFIG.subtitleLine2}` : '';
+
+        let text = `🏆 CardCrawler Deck-Bewertung${sub1}${sub2}\n`;
+        text += `💰 Gesamtkosten: ${total} (Ø ${avg} / Karte)\n`;
+        text += `✔ Karten Gefunden: ${found}\n`;
+        text += `⚠️ Auffälligkeiten / Signale: ${alerts}\n`;
+
+        navigator.clipboard.writeText(text).then(() => {
+            alert("Ergebnis-Zusammenfassung in die Zwischenablage kopiert!");
+        }).catch(err => {
+            alert("Kopieren fehlgeschlagen: " + err);
+        });
     }
 
     function addCardToMaps(originalName, price) {
