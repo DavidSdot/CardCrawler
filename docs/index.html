@@ -259,6 +259,11 @@
         }
 
         /* REIHEN-HERVORHEBUNGEN */
+        .row-banned {
+            background: rgba(239, 68, 68, 0.22) !important;
+            border-left: 4px solid var(--danger);
+        }
+
         .row-commander {
             background: rgba(6, 182, 212, 0.1) !important;
             border-left: 4px solid var(--accent);
@@ -354,9 +359,12 @@
             <input type="file" id="file-picker-input" accept=".json" style="display:none;" onchange="handleManualFile(event)">
         </div>
 
-        <div style="display: flex; gap: 0.5rem;">
-            <button class="btn btn-orange" id="btn-evaluate" style="flex: 1;" onclick="evaluateDeck()">
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button class="btn btn-orange" id="btn-evaluate" style="flex: 1; min-width: 180px;" onclick="evaluateDeck()">
                 🚀 Deck-Preise Berechnen
+            </button>
+            <button class="btn btn-secondary" style="font-size: 0.85rem;" onclick="pasteFromClipboard()" title="Aus Zwischenablage einfügen & direkt berechnen">
+                📋 Einfügen
             </button>
             <button class="btn btn-secondary" style="font-size: 0.85rem;" onclick="clearDeckInput()" title="Textfeld leeren">
                 🗑️ Leeren
@@ -535,11 +543,44 @@
         }
     }
 
+    // Offizielle MTG Commander Banlist (inkl. Ante, Verschwörungen / Conspiracy & gesperrten Karten)
+    const bannedCommanderCards = new Set([
+        // Standard Commander Banlist
+        "ancestral recall", "balance", "biorhythm", "black lotus", "braids, cabal minion",
+        "channel", "chaos orb", "coalition victory", "dockside extortionist", "emrakul, the aeons torn",
+        "erayo, soratami ascendant", "falling star", "fastbond", "flash", "gifts ungiven",
+        "golos, tireless pilgrim", "griselbrand", "hullbreacher", "iona, shield of emeria",
+        "jeweled lotus", "karakas", "leovold, emissary of trest", "limited resources",
+        "lutri, the spellchaser", "mana crypt", "mox emerald", "mox jet", "mox pearl",
+        "mox ruby", "mox sapphire", "nadu, winged wisdom", "panoptic mirror", "paradox engine",
+        "primeval titan", "prophet of kruphix", "recurring nightmare", "rofellos, llanowar emissary",
+        "shahrazad", "sundering titan", "sway of the stars", "sylvan primordial", "time vault",
+        "time walk", "timetwister", "tinker", "tolarian academy", "trade secrets",
+        "upheaval", "yawgmoth's bargain",
+
+        // Vom Benutzer angegebene / rassistisch gesperrte Karten
+        "cleanse", "stone-throwing devils", "pradesh gypsies", "jihad", "imprison", "crusade",
+
+        // Ante & Einsatz-Karten
+        "amulet of quoz", "bronze tablet", "contract from below", "darkpact",
+        "demonic attorney", "jeweled bird", "rebirth", "tempest efreet", "timmerian fiends",
+
+        // Verschwörungs-Karten (Conspiracy Cards)
+        "adriana's valor", "advantageous proclamation", "assemble the rank and vile",
+        "backup plan", "brago's favor", "double stroke", "echoing boon", "emissary's ploy",
+        "hired heist", "hold the perimeter", "hymn of the wilds", "immediate action",
+        "incendiary dissent", "iterative analysis", "muzzio's preparations", "natural unity",
+        "power play", "secret summoning", "secrets of paradise", "sentinel dispatch",
+        "sovereign's realm", "summoner's bond", "unexpected potential", "weight advantage",
+        "worldknit"
+    ]);
+
     function renderConfigBadges() {
         const container = document.getElementById('config-info-bar');
         if (!container) return;
 
         let badges = [];
+        badges.push(`⛔ Commander Banlist aktiv`);
         if (CONFIG.priceLimit > 0) {
             badges.push(`⚙️ Limit / Karte: €${CONFIG.priceLimit.toFixed(2)}`);
         }
@@ -610,6 +651,24 @@
         const deckInput = document.getElementById('deck-input');
         if (deckInput && deckInput.value.trim().length > 0) {
             evaluateDeck();
+        }
+    }
+
+    async function pasteFromClipboard() {
+        try {
+            const text = await navigator.clipboard.readText();
+            if (!text || text.trim().length === 0) {
+                alert("Die Zwischenablage ist leer.");
+                return;
+            }
+            const deckInput = document.getElementById('deck-input');
+            if (deckInput) {
+                deckInput.value = text;
+                localStorage.setItem('cardcrawler_saved_deck', text);
+                evaluateDeck(); // Direkt berechnen nach dem Einfügen
+            }
+        } catch (err) {
+            alert("Zugriff auf die Zwischenablage nicht erlaubt oder fehlgeschlagen. Bitte nutze Strg + V im Textfeld.");
         }
     }
 
@@ -850,6 +909,9 @@
             let isFuzzyMatch = false;
             let sortPriority = 4;
 
+            const isBanned = bannedCommanderCards.has(key) || 
+                (matchResult && (bannedCommanderCards.has(matchResult.matchedKey) || bannedCommanderCards.has(matchResult.displayName.toLowerCase())));
+
             if (matchResult !== null) {
                 foundCount++;
                 unitPrice = matchResult.price;
@@ -887,6 +949,14 @@
                 sortPriority = -1; // Commander steht immer ganz oben in der Tabelle!
             }
 
+            if (isBanned) {
+                symbol = "⛔";
+                sortPriority = -2; // Gebannte Karten stehen ganz oben an 1. Stelle!
+                if (!isLimitExceeded && !isFuzzyMatch) {
+                    alertCount++;
+                }
+            }
+
             currentResults.push({
                 symbol,
                 count,
@@ -899,6 +969,7 @@
                 isLimitExceeded,
                 isFuzzyMatch,
                 isCommander,
+                isBanned,
                 sortPriority
             });
         }
@@ -945,16 +1016,23 @@
             let symStyle = "color: var(--success);";
             let badgesHtml = "";
 
-            if (item.isCommander) {
-                rowClass = "row-commander";
-                badgesHtml += `<span class="badge badge-commander">👑 Commander</span> `;
-            }
-
-            if (!item.found) {
+            if (item.isBanned) {
+                rowClass = "row-banned";
+                symStyle = "color: var(--danger); font-weight: bold;";
+                badgesHtml = `<span class="badge badge-danger" style="background: rgba(239,68,68,0.35); color: #fca5a5; border-color: rgba(239,68,68,0.6);">⛔ GEBANNT (Commander)</span> `;
+                if (item.isCommander) {
+                    badgesHtml = `<span class="badge badge-commander">👑 Commander</span> ` + badgesHtml;
+                }
+            } else if (!item.found) {
                 rowClass = "row-missing";
                 symStyle = "color: var(--danger); font-weight: bold;";
-                badgesHtml += `<span class="badge badge-danger">✖ Nicht gefunden</span>`;
+                badgesHtml = `<span class="badge badge-danger">✖ Nicht gefunden</span>`;
             } else {
+                if (item.isCommander) {
+                    rowClass = "row-commander";
+                    badgesHtml += `<span class="badge badge-commander">👑 Commander</span> `;
+                }
+
                 if (item.isLimitExceeded) {
                     if (!item.isCommander) rowClass = "row-limit-exceeded";
                     symStyle = "color: var(--accent-orange); font-weight: bold;";
