@@ -95,8 +95,14 @@ namespace CardCrawler.Cardmarket
             var compactList = cards
                 .Where(c => !string.IsNullOrWhiteSpace(c.Name) && c.Price.HasValue && c.Price.Value > 0)
                 .Select(c => new object[] { c.Name, c.Price!.Value });
-            await File.WriteAllTextAsync(jsFile, "window.CARDMARKET_PRICES=" + System.Text.Json.JsonSerializer.Serialize(compactList) + ";");
-            Console.WriteLine($"Merged {cards.Count} cards to {_cacheFile} and compact cardmarket_prices.js");
+            string timestamp = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
+            if (!string.IsNullOrWhiteSpace(productData.CreatedAt) && DateTime.TryParse(productData.CreatedAt, out DateTime parsedDate))
+            {
+                timestamp = parsedDate.ToString("dd.MM.yyyy HH:mm");
+            }
+            string jsContent = $"window.CARDMARKET_UPDATED_AT=\"{timestamp}\";\nwindow.CARDMARKET_PRICES=" + System.Text.Json.JsonSerializer.Serialize(compactList) + ";";
+            await File.WriteAllTextAsync(jsFile, jsContent);
+            Console.WriteLine($"Merged {cards.Count} cards to {_cacheFile} and compact cardmarket_prices.js (Timestamp: {timestamp})");
         }
 
         public override async Task<CardData?> GetCardData(string cardName)
