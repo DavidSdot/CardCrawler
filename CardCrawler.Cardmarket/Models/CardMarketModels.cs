@@ -15,6 +15,7 @@ namespace CardCrawler.Cardmarket.Models
         public string? Name { get; set; }
         public int IdCategory { get; set; }
         public string? CategoryName { get; set; }
+        public int? IdExpansion { get; set; }
     }
 
     public class CardMarketPriceResponse

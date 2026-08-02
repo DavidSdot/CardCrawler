@@ -333,6 +333,146 @@
             td { color: black !important; }
             header h1 { background: none !important; -webkit-text-fill-color: black !important; color: black !important; }
         }
+
+        /* MODAL STYLING */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        .modal-content {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 720px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+            overflow: hidden;
+            animation: modalFadeIn 0.2s ease-out;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-header {
+            padding: 1.2rem 1.5rem;
+            border-bottom: 1px solid var(--card-border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .modal-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            color: var(--text-main);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.6rem;
+            cursor: pointer;
+            line-height: 1;
+            padding: 0 0.5rem;
+            transition: color 0.15s;
+        }
+        .modal-close:hover { color: var(--danger); }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.2rem;
+            border-bottom: 1px solid var(--card-border);
+            padding-bottom: 0.5rem;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: var(--radius-md);
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: var(--text-main);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .banned-tags-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.4rem;
+            max-height: 380px;
+            overflow-y: auto;
+            padding-right: 0.4rem;
+        }
+
+        .banned-tag {
+            background: rgba(239, 68, 68, 0.12);
+            color: #fca5a5;
+            border: 1px solid rgba(239, 68, 68, 0.25);
+            padding: 0.25rem 0.55rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+
+        .sets-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .set-card {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid var(--card-border);
+            border-radius: var(--radius-md);
+            padding: 0.85rem 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .set-desc {
+            font-size: 0.84rem;
+            color: var(--text-muted);
+            margin-top: 0.1rem;
+        }
     </style>
 </head>
 <body>
@@ -433,6 +573,72 @@
     <footer class="footer">
         CardCrawler Web &bull; JUZ Hemsbach MTG
     </footer>
+</div>
+
+<!-- MODAL FÜR GEBANNTES & IGNORIERTE SETS -->
+<div id="banlist-modal" class="modal-overlay" style="display: none;" onclick="if(event.target===this) closeBanlistModal()">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>🛡️ Gebannte Karten & Ignorierte Sets</h3>
+            <button class="modal-close" onclick="closeBanlistModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div class="modal-tabs">
+                <button class="tab-btn active" id="btn-tab-banned" onclick="switchBanlistTab('banned')">⛔ Gebannte Karten (<span id="banned-count-badge">0</span>)</button>
+                <button class="tab-btn" id="btn-tab-sets" onclick="switchBanlistTab('sets')">🎴 Ignorierte Sets (Oversized)</button>
+            </div>
+            
+            <div id="tab-banned-content">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.9rem;">
+                    Diese Karten lösen ein <code>⛔ GEBANNT</code> Signal aus und stehen in den Ergebnissen an 1. Stelle:
+                </p>
+                <div class="banned-tags-grid" id="banned-cards-list"></div>
+            </div>
+
+            <div id="tab-sets-content" style="display: none;">
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.9rem;">
+                    Folgende Kartensets, Formate und übergroße Kartentypen werden bei den Preisdatenbank-Updates automatisch herausgefiltert:
+                </p>
+                <div class="sets-list">
+                    <div class="set-card">
+                        <span class="badge badge-warning" style="font-size: 0.85rem;">ID 110</span>
+                        <div>
+                            <strong style="color: var(--text-main);">Oversized 6x9 Promos</strong>
+                            <div class="set-desc">Enthält z. B. <em>Oversized Black Lotus</em>, <em>Chaos Orb</em> u. a. übergroße Promokarten.</div>
+                        </div>
+                    </div>
+                    <div class="set-card">
+                        <span class="badge badge-warning" style="font-size: 0.85rem;">ID 373</span>
+                        <div>
+                            <strong style="color: var(--text-main);">Commander Oversized</strong>
+                            <div class="set-desc">Übergroße Commander-Legendärkarten aus Commander-Precons.</div>
+                        </div>
+                    </div>
+                    <div class="set-card">
+                        <span class="badge badge-warning" style="font-size: 0.85rem;">ID 258</span>
+                        <div>
+                            <strong style="color: var(--text-main);">Planechase (Oversized Karten)</strong>
+                            <div class="set-desc">Planar- und Phänomen-Karten für das Planechase-Format.</div>
+                        </div>
+                    </div>
+                    <div class="set-card">
+                        <span class="badge badge-warning" style="font-size: 0.85rem;">ID 296</span>
+                        <div>
+                            <strong style="color: var(--text-main);">Archenemy (Oversized Karten)</strong>
+                            <div class="set-desc">Scheme-Karten für das Archenemy-Format.</div>
+                        </div>
+                    </div>
+                    <div class="set-card">
+                        <span class="badge badge-info" style="font-size: 0.85rem;">Scryfall</span>
+                        <div>
+                            <strong style="color: var(--text-main);">Scryfall Oversized & Special Layouts</strong>
+                            <div class="set-desc">Karten mit <code>oversized == true</code> oder <code>layout == "oversized"</code>.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
@@ -603,9 +809,67 @@
             badges.push(`🚫 ${CONFIG.customExcludedCards.length} verbotene Karten`);
         }
 
-        container.innerHTML = badges.map(b => 
+        let html = badges.map(b => 
             `<span class="badge" style="background: rgba(255,255,255,0.04); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); font-weight: 500; font-size: 0.78rem;">${escapeHtml(b)}</span>`
         ).join('');
+
+        html += `<button class="badge" style="background: rgba(59, 130, 246, 0.2); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.4); cursor: pointer; transition: all 0.2s;" onclick="openBanlistModal()">🛡️ Gebannte Karten & Ignorierte Sets</button>`;
+
+        container.innerHTML = html;
+    }
+
+    function openBanlistModal() {
+        const modal = document.getElementById('banlist-modal');
+        if (!modal) return;
+        
+        // Render Banned Cards List
+        const listContainer = document.getElementById('banned-cards-list');
+        const countBadge = document.getElementById('banned-count-badge');
+
+        const allBanned = Array.from(bannedCommanderCards);
+        if (CONFIG.customExcludedCards && CONFIG.customExcludedCards.length > 0) {
+            CONFIG.customExcludedCards.forEach(c => {
+                const lc = c.toLowerCase().trim();
+                if (lc && !allBanned.includes(lc)) {
+                    allBanned.push(lc);
+                }
+            });
+        }
+
+        allBanned.sort();
+        if (countBadge) countBadge.textContent = allBanned.length;
+
+        if (listContainer) {
+            listContainer.innerHTML = allBanned.map(card => 
+                `<span class="banned-tag">${escapeHtml(card)}</span>`
+            ).join('');
+        }
+
+        modal.style.display = 'flex';
+    }
+
+    function closeBanlistModal() {
+        const modal = document.getElementById('banlist-modal');
+        if (modal) modal.style.display = 'none';
+    }
+
+    function switchBanlistTab(tabName) {
+        const bannedTab = document.getElementById('tab-banned-content');
+        const setsTab = document.getElementById('tab-sets-content');
+        const btnBanned = document.getElementById('btn-tab-banned');
+        const btnSets = document.getElementById('btn-tab-sets');
+
+        if (tabName === 'banned') {
+            bannedTab.style.display = 'block';
+            setsTab.style.display = 'none';
+            btnBanned.classList.add('active');
+            btnSets.classList.remove('active');
+        } else {
+            bannedTab.style.display = 'none';
+            setsTab.style.display = 'block';
+            btnBanned.classList.remove('active');
+            btnSets.classList.add('active');
+        }
     }
 
     function normalizeCardName(name) {
