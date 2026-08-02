@@ -62,6 +62,13 @@ namespace CardCrawler.Scryfall
                         continue;
                     }
 
+                    bool? isOversized = jsonNode["oversized"]?.GetValue<bool>();
+                    string? layout = jsonNode["layout"]?.GetValue<string>();
+                    if (isOversized == true || string.Equals(layout, "oversized", StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
                     decimal price = -1;
                     System.Text.Json.Nodes.JsonNode? pricesNode = jsonNode["prices"];
                     if (pricesNode is not null)

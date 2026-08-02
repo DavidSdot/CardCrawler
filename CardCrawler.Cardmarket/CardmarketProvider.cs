@@ -82,8 +82,15 @@ namespace CardCrawler.Cardmarket
             Dictionary<int, CardMarketPriceGuide> priceLookup = priceData.PriceGuides.ToDictionary(p => p.IdProduct, p => p);
             List<CachedCard> cards = [];
 
+            HashSet<int> excludedExpansions = [110, 373, 258, 296];
+
             foreach (var product in productData.Products)
             {
+                if (product.IdExpansion.HasValue && excludedExpansions.Contains(product.IdExpansion.Value))
+                {
+                    continue;
+                }
+
                 if (priceLookup.TryGetValue(product.IdProduct, out CardMarketPriceGuide? priceGuide))
                 {
                     cards.Add(new CachedCard(product.IdProduct.ToString(), product.Name ?? "Unknown", priceGuide.BestPrice()));
