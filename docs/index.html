@@ -644,7 +644,11 @@
             }
         }
         
-        cacheStatusBadge.textContent = `⚡ ${cardDatabase.size.toLocaleString()} Karten geladen`;
+        let dateStr = "";
+        if (window.CARDMARKET_UPDATED_AT) {
+            dateStr = ` (Stand: ${window.CARDMARKET_UPDATED_AT})`;
+        }
+        cacheStatusBadge.textContent = `⚡ ${cardDatabase.size.toLocaleString()} Karten geladen${dateStr}`;
         cacheStatusBadge.className = "badge badge-success";
 
         try {

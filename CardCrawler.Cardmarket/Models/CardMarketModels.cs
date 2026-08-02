@@ -5,6 +5,7 @@ namespace CardCrawler.Cardmarket.Models
 {
     public class CardMarketProductResponse
     {
+        public string? CreatedAt { get; set; }
         public List<CardMarketProduct>? Products { get; set; }
     }
 
