@@ -15,6 +15,8 @@ namespace CardCrawler
         public bool ExcludeBasics { get; init; }
         public decimal BudgetLimit { get; init; } = -1M;
         public decimal PriceLimit { get; init; } = -1M;
+        public int MinCardCount { get; init; } = 100;
+        public int MaxCardCount { get; init; } = 100;
         public bool UpdateCache { get; init; }
         public string? UpdateCacheFile { get; init; }
         public List<string> UnnamedArgs { get; init; } = [];
@@ -34,6 +36,8 @@ namespace CardCrawler
             bool excludeBasics = false;
             decimal budgetLimit = -1M;
             decimal priceLimit = -1M;
+            int minCardCount = 100;
+            int maxCardCount = 100;
             bool updateCache = false;
             
             foreach (string arg in args)
@@ -71,6 +75,19 @@ namespace CardCrawler
                      {
                          priceLimit = l;
                      }
+                }
+                else if (arg.StartsWith("--cards=", StringComparison.Ordinal) && int.TryParse(arg.AsSpan("--cards=".Length), out int cCount))
+                {
+                    minCardCount = cCount;
+                    maxCardCount = cCount;
+                }
+                else if (arg.StartsWith("--min-cards=", StringComparison.Ordinal) && int.TryParse(arg.AsSpan("--min-cards=".Length), out int minC))
+                {
+                    minCardCount = minC;
+                }
+                else if (arg.StartsWith("--max-cards=", StringComparison.Ordinal) && int.TryParse(arg.AsSpan("--max-cards=".Length), out int maxC))
+                {
+                    maxCardCount = maxC;
                 }
                 else if (arg.Equals("--help", StringComparison.Ordinal) || arg.Equals("-h", StringComparison.Ordinal))
                 {
@@ -119,6 +136,8 @@ namespace CardCrawler
                 ExcludeBasics = excludeBasics,
                 BudgetLimit = budgetLimit,
                 PriceLimit = priceLimit,
+                MinCardCount = minCardCount,
+                MaxCardCount = maxCardCount,
                 UpdateCache = updateCache,
                 UpdateCacheFile = unnamed.FirstOrDefault(),
                 UnnamedArgs = unnamed
