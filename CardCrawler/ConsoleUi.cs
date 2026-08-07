@@ -113,11 +113,52 @@ namespace CardCrawler
             Console.WriteLine(br);
 
             int totalCards = list.Sum(e => e.Count);
-            string status = (options.BudgetLimit > 0 && total > options.BudgetLimit) || list.Any(e => e.ExceedsLimit) ? "NOT OK" : "OK";
+            bool countOk = true;
+            string countDisplay = $"{totalCards}";
+
+            if (options.MinCardCount > 0 || options.MaxCardCount > 0)
+            {
+                if (options.MinCardCount == options.MaxCardCount && options.MinCardCount > 0)
+                {
+                    if (totalCards == options.MinCardCount)
+                    {
+                        countDisplay = $"{totalCards} / {options.MinCardCount} (OK)";
+                    }
+                    else if (totalCards < options.MinCardCount)
+                    {
+                        countDisplay = $"{totalCards} / {options.MinCardCount} (NOT OK - {options.MinCardCount - totalCards} missing)";
+                        countOk = false;
+                    }
+                    else
+                    {
+                        countDisplay = $"{totalCards} / {options.MinCardCount} (NOT OK - {totalCards - options.MinCardCount} extra)";
+                        countOk = false;
+                    }
+                }
+                else
+                {
+                    if (options.MinCardCount > 0 && totalCards < options.MinCardCount)
+                    {
+                        countDisplay = $"{totalCards} (Min: {options.MinCardCount} - NOT OK)";
+                        countOk = false;
+                    }
+                    else if (options.MaxCardCount > 0 && totalCards > options.MaxCardCount)
+                    {
+                        countDisplay = $"{totalCards} (Max: {options.MaxCardCount} - NOT OK)";
+                        countOk = false;
+                    }
+                    else
+                    {
+                        countDisplay = $"{totalCards} (OK)";
+                    }
+                }
+            }
+
+            string status = (options.BudgetLimit > 0 && total > options.BudgetLimit) || list.Any(e => e.ExceedsLimit) || !countOk ? "NOT OK" : "OK";
 
             Console.WriteLine();
             Console.WriteLine($" Total: {total:0.00}€");
-            Console.WriteLine($" Cards: {totalCards}");
+            Console.WriteLine($" Cards: {countDisplay}");
             Console.WriteLine($" Status: {status}");
 
             if (options.BudgetLimit > 0)

@@ -526,6 +526,10 @@
                 <div class="stat-label">Gesamtkosten Deck</div>
             </div>
             <div class="stat-card">
+                <div class="stat-val" id="stat-card-count" style="color: var(--success);">0 / 100</div>
+                <div class="stat-label" id="stat-card-count-label">Deckgröße (Karten)</div>
+            </div>
+            <div class="stat-card">
                 <div class="stat-val" id="stat-found-count" style="color: var(--success);">0 / 0</div>
                 <div class="stat-label">Karten Gefunden</div>
             </div>
@@ -539,6 +543,9 @@
             </div>
         </div>
 
+        <div id="card-count-alert" style="display: none; margin-bottom: 0.5rem;" class="badge badge-danger">
+            ⚠️ Kartenanzahl weicht ab!
+        </div>
         <div id="budget-alert" style="display: none; margin-bottom: 1rem;" class="badge badge-danger">
             ⚠️ Gesamtbudget überschritten!
         </div>
@@ -648,6 +655,8 @@
         subtitleLine2: "Deckwichteln",
 
         priceLimit: 5.00,        // Einzelkarten Limit in € (Karten über 5,00 € werden markiert)
+        minCardCount: 100,       // Soll-Kartenanzahl Min (100 für Commander)
+        maxCardCount: 100,       // Soll-Kartenanzahl Max (100 für Commander)
         excludeBasics: false,    // Standardländer ignorieren (false = aus)
         excludeFirstCard: false, // 1. Karte ignorieren (false = aus)
         budgetLimit: 0,          // Gesamtbudget Limit in € (0 = deaktiviert/leer)
@@ -793,6 +802,19 @@
 
         let badges = [];
         badges.push(`⛔ Commander Banlist aktiv`);
+
+        if (CONFIG.minCardCount > 0 || CONFIG.maxCardCount > 0) {
+            if (CONFIG.minCardCount === CONFIG.maxCardCount && CONFIG.minCardCount > 0) {
+                badges.push(`⚙️ Deckgröße: ${CONFIG.minCardCount} Karten`);
+            } else if (CONFIG.minCardCount > 0 && CONFIG.maxCardCount > 0) {
+                badges.push(`⚙️ Min: ${CONFIG.minCardCount} / Max: ${CONFIG.maxCardCount} Karten`);
+            } else if (CONFIG.minCardCount > 0) {
+                badges.push(`⚙️ Min. ${CONFIG.minCardCount} Karten`);
+            } else if (CONFIG.maxCardCount > 0) {
+                badges.push(`⚙️ Max. ${CONFIG.maxCardCount} Karten`);
+            }
+        }
+
         if (CONFIG.priceLimit > 0) {
             badges.push(`⚙️ Limit / Karte: €${CONFIG.priceLimit.toFixed(2)}`);
         }
@@ -963,11 +985,37 @@
         const alerts = document.getElementById('stat-alert-count').textContent;
         const avg = document.getElementById('stat-avg-price').textContent;
 
+        const totalPhysicalCards = currentResults.reduce((sum, r) => sum + r.count, 0);
+
         const sub1 = CONFIG.subtitleLine1 ? `\n${CONFIG.subtitleLine1}` : '';
         const sub2 = CONFIG.subtitleLine2 ? ` - ${CONFIG.subtitleLine2}` : '';
 
+        let countSummary = `${totalPhysicalCards}`;
+        if (CONFIG.minCardCount > 0 || CONFIG.maxCardCount > 0) {
+            const min = CONFIG.minCardCount || 0;
+            const max = CONFIG.maxCardCount || 0;
+            if (min === max && min > 0) {
+                if (totalPhysicalCards === min) {
+                    countSummary = `${totalPhysicalCards} / ${min} (✔ Vollständig)`;
+                } else if (totalPhysicalCards < min) {
+                    countSummary = `${totalPhysicalCards} / ${min} (⚠️ ${min - totalPhysicalCards} zu wenig!)`;
+                } else {
+                    countSummary = `${totalPhysicalCards} / ${max} (⚠️ ${totalPhysicalCards - max} zu viel!)`;
+                }
+            } else {
+                if (min > 0 && totalPhysicalCards < min) {
+                    countSummary = `${totalPhysicalCards} (Min: ${min} - ⚠️ ${min - totalPhysicalCards} zu wenig!)`;
+                } else if (max > 0 && totalPhysicalCards > max) {
+                    countSummary = `${totalPhysicalCards} (Max: ${max} - ⚠️ ${totalPhysicalCards - max} zu viel!)`;
+                } else {
+                    countSummary = `${totalPhysicalCards} (✔ Passend)`;
+                }
+            }
+        }
+
         let text = `🏆 CardCrawler Deck-Bewertung${sub1}${sub2}\n`;
         text += `💰 Gesamtkosten: ${total} (Ø ${avg} / Karte)\n`;
+        text += `🃏 Kartenanzahl: ${countSummary}\n`;
         text += `✔ Karten Gefunden: ${found}\n`;
         text += `⚠️ Auffälligkeiten / Signale: ${alerts}\n`;
 
@@ -1301,12 +1349,69 @@
             return a.rawName.localeCompare(b.rawName);
         });
 
-        renderResults(totalPrice, foundCount, totalCount, alertCount, budgetLimit);
+        const totalPhysicalCards = currentResults.reduce((sum, r) => sum + r.count, 0);
+
+        renderResults(totalPrice, foundCount, totalCount, alertCount, budgetLimit, totalPhysicalCards);
     }
 
-    function renderResults(totalPrice, foundCount, totalCount, alertCount, budgetLimit) {
+    function renderResults(totalPrice, foundCount, totalCount, alertCount, budgetLimit, totalPhysicalCards) {
         document.getElementById('results-container').style.display = 'block';
         document.getElementById('stat-total-price').textContent = `€${totalPrice.toFixed(2)}`;
+
+        // Card Count Stat & Alert
+        const cardCountValEl = document.getElementById('stat-card-count');
+        const cardCountAlertEl = document.getElementById('card-count-alert');
+        
+        let countText = `${totalPhysicalCards}`;
+        let isCountOk = true;
+        let countAlertText = "";
+
+        if (CONFIG.minCardCount > 0 || CONFIG.maxCardCount > 0) {
+            const min = CONFIG.minCardCount || 0;
+            const max = CONFIG.maxCardCount || 0;
+
+            if (min === max && min > 0) {
+                countText = `${totalPhysicalCards} / ${min}`;
+                if (totalPhysicalCards === min) {
+                    cardCountValEl.style.color = 'var(--success)';
+                } else if (totalPhysicalCards < min) {
+                    isCountOk = false;
+                    cardCountValEl.style.color = 'var(--danger)';
+                    countAlertText = `⚠️ Deck unvollständig: Das Deck enthält ${totalPhysicalCards} von ${min} Karten (${min - totalPhysicalCards} Karte(n) fehlen)!`;
+                } else {
+                    isCountOk = false;
+                    cardCountValEl.style.color = 'var(--accent-orange)';
+                    countAlertText = `⚠️ Deck zu groß: Das Deck enthält ${totalPhysicalCards} von ${max} Karten (${totalPhysicalCards - max} Karte(n) zu viel)!`;
+                }
+            } else {
+                if (min > 0 && totalPhysicalCards < min) {
+                    isCountOk = false;
+                    countText = `${totalPhysicalCards} (Min: ${min})`;
+                    cardCountValEl.style.color = 'var(--danger)';
+                    countAlertText = `⚠️ Deck unvollständig: Enthält ${totalPhysicalCards} Karten (Min. ${min} erforderlich)!`;
+                } else if (max > 0 && totalPhysicalCards > max) {
+                    isCountOk = false;
+                    countText = `${totalPhysicalCards} (Max: ${max})`;
+                    cardCountValEl.style.color = 'var(--accent-orange)';
+                    countAlertText = `⚠️ Deck zu groß: Enthält ${totalPhysicalCards} Karten (Max. ${max} erlaubt)!`;
+                } else {
+                    cardCountValEl.style.color = 'var(--success)';
+                    countText = `${totalPhysicalCards}`;
+                }
+            }
+        } else {
+            cardCountValEl.style.color = 'var(--success)';
+        }
+
+        cardCountValEl.textContent = countText;
+
+        if (!isCountOk && countAlertText) {
+            cardCountAlertEl.style.display = 'inline-block';
+            cardCountAlertEl.textContent = countAlertText;
+        } else {
+            cardCountAlertEl.style.display = 'none';
+        }
+
         document.getElementById('stat-found-count').textContent = `${foundCount} / ${totalCount}`;
         document.getElementById('stat-alert-count').textContent = alertCount;
         
