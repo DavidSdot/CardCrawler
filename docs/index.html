@@ -597,7 +597,8 @@
             
             <div id="tab-banned-content">
                 <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.9rem;">
-                    Diese Karten lösen ein <code>⛔ GEBANNT</code> Signal aus und stehen in den Ergebnissen an 1. Stelle:
+                    Diese Karten lösen ein <code>⛔ GEBANNT</code> Signal aus und stehen in den Ergebnissen an 1. Stelle
+                    <span id="banlist-source-info" style="display: block; margin-top: 0.25rem; font-size: 0.78rem; opacity: 0.85;"></span>
                 </p>
                 <div class="banned-tags-grid" id="banned-cards-list"></div>
             </div>
@@ -677,7 +678,9 @@
 
     // Set Subtitles & Config Badges on Load
     window.addEventListener('DOMContentLoaded', async () => {
+        initBanlist();
         renderConfigBadges();
+        refreshBanlistFromScryfall();
 
         // Deckliste im LocalStorage zwischenspeichern & wiederherstellen
         const deckInput = document.getElementById('deck-input');
@@ -764,37 +767,156 @@
         }
     }
 
-    // Offizielle MTG Commander Banlist (inkl. Ante, Verschwörungen / Conspiracy & gesperrten Karten)
-    const bannedCommanderCards = new Set([
-        // Standard Commander Banlist
-        "ancestral recall", "balance", "biorhythm", "black lotus", "braids, cabal minion",
-        "channel", "chaos orb", "coalition victory", "dockside extortionist", "emrakul, the aeons torn",
-        "erayo, soratami ascendant", "falling star", "fastbond", "flash", "gifts ungiven",
-        "golos, tireless pilgrim", "griselbrand", "hullbreacher", "iona, shield of emeria",
-        "jeweled lotus", "karakas", "leovold, emissary of trest", "limited resources",
-        "lutri, the spellchaser", "mana crypt", "mox emerald", "mox jet", "mox pearl",
-        "mox ruby", "mox sapphire", "nadu, winged wisdom", "panoptic mirror", "paradox engine",
-        "primeval titan", "prophet of kruphix", "recurring nightmare", "rofellos, llanowar emissary",
-        "shahrazad", "sundering titan", "sway of the stars", "sylvan primordial", "time vault",
-        "time walk", "timetwister", "tinker", "tolarian academy", "trade secrets",
-        "upheaval", "yawgmoth's bargain",
+    // Offline-Fallback der offiziellen MTG Commander Banlist (Stand: Scryfall banned:commander, 83 Karten)
+    // Wird automatisch überschrieben durch window.COMMANDER_BANLIST (aus cardmarket_prices.js)
+    // sowie im Hintergrund live über die Scryfall-API aktualisiert.
+    const DEFAULT_BANNED_COMMANDER_CARDS = [
+        "adriana's valor", "advantageous proclamation", "amulet of quoz", "ancestral recall",
+        "assemble the rank and vile", "backup plan", "balance", "black lotus",
+        "brago's favor", "bronze tablet", "channel", "chaos orb",
+        "cleanse", "contract from below", "crusade", "darkpact",
+        "demonic attorney", "dockside extortionist", "double stroke", "echoing boon",
+        "emissary's ploy", "emrakul, the aeons torn", "erayo, soratami ascendant // erayo's essence", "falling star",
+        "fastbond", "flash", "golos, tireless pilgrim", "griselbrand",
+        "hired heist", "hold the perimeter", "hullbreacher", "hymn of the wilds",
+        "immediate action", "imprison", "incendiary dissent", "invoke prejudice",
+        "iona, shield of emeria", "iterative analysis", "jeweled bird", "jeweled lotus",
+        "jihad", "karakas", "leovold, emissary of trest", "library of alexandria",
+        "limited resources", "mana crypt", "mox emerald", "mox jet",
+        "mox pearl", "mox ruby", "mox sapphire", "muzzio's preparations",
+        "nadu, winged wisdom", "natural unity", "paradox engine", "power play",
+        "pradesh gypsies", "primeval titan", "prophet of kruphix", "rebirth",
+        "recurring nightmare", "rofellos, llanowar emissary", "secret summoning", "secrets of paradise",
+        "sentinel dispatch", "shahrazad", "sovereign's realm", "stone-throwing devils",
+        "summoner's bond", "sundering titan", "sylvan primordial", "tempest efreet",
+        "time vault", "time walk", "timmerian fiends", "tinker",
+        "tolarian academy", "trade secrets", "unexpected potential", "upheaval",
+        "weight advantage", "worldknit", "yawgmoth's bargain"
+    ];
 
-        // Vom Benutzer angegebene / rassistisch gesperrte Karten
-        "cleanse", "stone-throwing devils", "pradesh gypsies", "jihad", "imprison", "crusade",
+    const BANLIST_CACHE_KEY = 'cardcrawler_commander_banlist_v1';
+    const BANLIST_CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 Stunden
 
-        // Ante & Einsatz-Karten
-        "amulet of quoz", "bronze tablet", "contract from below", "darkpact",
-        "demonic attorney", "jeweled bird", "rebirth", "tempest efreet", "timmerian fiends",
+    let bannedCommanderCards = new Set();
+    let bannedCommanderLookup = new Set();
+    let banlistSourceInfo = "Integrierte Fallback-Liste";
 
-        // Verschwörungs-Karten (Conspiracy Cards)
-        "adriana's valor", "advantageous proclamation", "assemble the rank and vile",
-        "backup plan", "brago's favor", "double stroke", "echoing boon", "emissary's ploy",
-        "hired heist", "hold the perimeter", "hymn of the wilds", "immediate action",
-        "incendiary dissent", "iterative analysis", "muzzio's preparations", "natural unity",
-        "power play", "secret summoning", "secrets of paradise", "sentinel dispatch",
-        "sovereign's realm", "summoner's bond", "unexpected potential", "weight advantage",
-        "worldknit"
-    ]);
+    function applyBanlist(cardList, sourceInfo) {
+        const nextCanonical = new Set();
+        const nextLookup = new Set();
+
+        for (const raw of cardList) {
+            const lc = String(raw || '').toLowerCase().trim();
+            if (!lc) continue;
+            nextCanonical.add(lc);
+            nextLookup.add(lc);
+
+            if (lc.includes('//')) {
+                const frontFace = lc.split('//')[0].trim();
+                if (frontFace) nextLookup.add(frontFace);
+            }
+        }
+
+        const changed = nextCanonical.size !== bannedCommanderCards.size ||
+            Array.from(nextCanonical).some(c => !bannedCommanderCards.has(c));
+
+        bannedCommanderCards = nextCanonical;
+        bannedCommanderLookup = nextLookup;
+        if (sourceInfo) banlistSourceInfo = sourceInfo;
+        return changed;
+    }
+
+    function isCardBanned(key, matchResult) {
+        const candidates = [key];
+        if (key && key.includes('//')) {
+            candidates.push(key.split('//')[0].trim());
+        }
+        if (matchResult) {
+            if (matchResult.matchedKey) candidates.push(matchResult.matchedKey);
+            if (matchResult.displayName) {
+                const disp = matchResult.displayName.toLowerCase().trim();
+                candidates.push(disp);
+                if (disp.includes('//')) {
+                    candidates.push(disp.split('//')[0].trim());
+                }
+            }
+        }
+        return candidates.some(c => c && bannedCommanderLookup.has(c));
+    }
+
+    function initBanlist() {
+        // 1. Priorität: Aktueller Scryfall-Cache im LocalStorage (falls vorhanden)
+        try {
+            const cachedRaw = localStorage.getItem(BANLIST_CACHE_KEY);
+            if (cachedRaw) {
+                const cached = JSON.parse(cachedRaw);
+                if (cached && Array.isArray(cached.cards) && cached.cards.length > 0) {
+                    const updatedStr = cached.updatedAt ? new Date(cached.updatedAt).toLocaleString('de-DE') : '';
+                    applyBanlist(cached.cards, `Scryfall (Cache${updatedStr ? ', Stand: ' + updatedStr : ''})`);
+                    return;
+                }
+            }
+        } catch (e) {}
+
+        // 2. Priorität: Vom Crawler eingebettete Banlist aus cardmarket_prices.js
+        if (Array.isArray(window.COMMANDER_BANLIST) && window.COMMANDER_BANLIST.length > 0) {
+            const ts = window.COMMANDER_BANLIST_UPDATED_AT || window.CARDMARKET_UPDATED_AT || '';
+            applyBanlist(window.COMMANDER_BANLIST, `cardmarket_prices.js${ts ? ' (Stand: ' + ts + ')' : ''}`);
+            return;
+        }
+
+        // 3. Priorität: Eingebaute Fallback-Liste
+        applyBanlist(DEFAULT_BANNED_COMMANDER_CARDS, 'Integrierte Fallback-Liste');
+    }
+
+    async function refreshBanlistFromScryfall() {
+        try {
+            const cachedRaw = localStorage.getItem(BANLIST_CACHE_KEY);
+            if (cachedRaw) {
+                const cached = JSON.parse(cachedRaw);
+                if (cached && cached.updatedAt && (Date.now() - cached.updatedAt) < BANLIST_CACHE_TTL_MS && Array.isArray(cached.cards) && cached.cards.length > 0) {
+                    return; // Cache ist noch frisch (< 24h)
+                }
+            }
+        } catch (e) {}
+
+        try {
+            const collected = [];
+            let nextUrl = 'https://api.scryfall.com/cards/search?q=banned%3Acommander';
+
+            while (nextUrl) {
+                const res = await fetch(nextUrl, { headers: { 'Accept': 'application/json' } });
+                if (!res.ok) return;
+                const json = await res.json();
+                if (Array.isArray(json.data)) {
+                    for (const card of json.data) {
+                        if (card && card.name) {
+                            collected.push(card.name.toLowerCase().trim());
+                        }
+                    }
+                }
+                nextUrl = (json.has_more && json.next_page) ? json.next_page : null;
+            }
+
+            if (collected.length > 0) {
+                const now = Date.now();
+                const uniqueSorted = Array.from(new Set(collected)).sort();
+                try {
+                    localStorage.setItem(BANLIST_CACHE_KEY, JSON.stringify({ updatedAt: now, cards: uniqueSorted }));
+                } catch (e) {}
+
+                const changed = applyBanlist(uniqueSorted, `Scryfall Live (Stand: ${new Date(now).toLocaleString('de-DE')})`);
+                if (changed) {
+                    const deckInput = document.getElementById('deck-input');
+                    if (deckInput && deckInput.value.trim().length > 0 && cardDatabase.size > 0) {
+                        evaluateDeck();
+                    }
+                }
+            }
+        } catch (err) {
+            console.warn('Scryfall Banlist Live-Update übersprungen (offline/CORS):', err);
+        }
+    }
 
     function renderConfigBadges() {
         const container = document.getElementById('config-info-bar');
@@ -860,6 +982,11 @@
 
         allBanned.sort();
         if (countBadge) countBadge.textContent = allBanned.length;
+
+        const sourceInfoEl = document.getElementById('banlist-source-info');
+        if (sourceInfoEl) {
+            sourceInfoEl.textContent = `Quelle: ${banlistSourceInfo}`;
+        }
 
         if (listContainer) {
             listContainer.innerHTML = allBanned.map(card => 
@@ -1271,8 +1398,7 @@
             let isFuzzyMatch = false;
             let sortPriority = 4;
 
-            const isBanned = bannedCommanderCards.has(key) || 
-                (matchResult && (bannedCommanderCards.has(matchResult.matchedKey) || bannedCommanderCards.has(matchResult.displayName.toLowerCase())));
+            const isBanned = isCardBanned(key, matchResult);
 
             let isAliasMatch = false;
             if (matchResult !== null) {

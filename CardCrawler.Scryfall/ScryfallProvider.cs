@@ -5,6 +5,7 @@ using System.Web;
 
 using CardCrawler.Core;
 using CardCrawler.Core.Models;
+using CardCrawler.Core.Services;
 
 namespace CardCrawler.Scryfall
 {
@@ -38,12 +39,13 @@ namespace CardCrawler.Scryfall
             }
 
             List<CachedCard> cards = [];
+            HashSet<string> bannedCommanderCards = new(StringComparer.OrdinalIgnoreCase);
             JsonSerializerOptions options = new()
             {
                 PropertyNameCaseInsensitive = true
             };
 
-            string file = files.First().FullName;
+            string file = files.OrderByDescending(f => f.LastWriteTimeUtc).First().FullName;
 
             try
             {
@@ -60,6 +62,12 @@ namespace CardCrawler.Scryfall
                     if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(name))
                     {
                         continue;
+                    }
+
+                    string? commanderLegality = jsonNode["legalities"]?["commander"]?.GetValue<string>();
+                    if (string.Equals(commanderLegality, "banned", StringComparison.OrdinalIgnoreCase))
+                    {
+                        bannedCommanderCards.Add(name.Trim().ToLowerInvariant());
                     }
 
                     bool? isOversized = jsonNode["oversized"]?.GetValue<bool>();
@@ -88,6 +96,14 @@ namespace CardCrawler.Scryfall
             }
 
             await File.WriteAllTextAsync(_cacheFile, JsonSerializer.Serialize(cards));
+
+            if (bannedCommanderCards.Count > 0)
+            {
+                List<string> sortedBanned = [.. bannedCommanderCards.OrderBy(n => n, StringComparer.Ordinal)];
+                string outputDir = Path.GetDirectoryName(_cacheFile) ?? Directory.GetCurrentDirectory();
+                await CommanderBanlistService.SaveBanlistJsonAsync(outputDir, sortedBanned);
+                Console.WriteLine($"Saved {sortedBanned.Count} banned Commander cards to {CommanderBanlistService.BanlistFileName}.");
+            }
         }
 
         public DateTime LastRequest = DateTime.MinValue;
