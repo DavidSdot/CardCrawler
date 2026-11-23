@@ -17,6 +17,16 @@ namespace CardCrawler.Cardmarket
 {
     public class CardMarketProvider : BaseCardProvider
     {
+using CardCrawler.Browser;
+using CardCrawler.Cardmarket.Models;
+using CardCrawler.Core;
+using CardCrawler.Core.Models;
+using CardCrawler.Core.Services;
+
+using HtmlAgilityPack;
+
+namespace CardCrawler.Cardmarket {
+    public class CardMarketProvider : BaseCardProvider {
         public const string BaseUrl = "https://www.cardmarket.com";
         public const string CardUrl = BaseUrl + "/en/Magic/Cards/";
         public const string SearchUrl = BaseUrl + "/en/Magic/AdvancedSearch?doSubmit=1&cardName=";
@@ -97,9 +107,10 @@ namespace CardCrawler.Cardmarket
                 }
             }
 
-            await File.WriteAllTextAsync(_cacheFile, System.Text.Json.JsonSerializer.Serialize(cards));
-            string jsFile = Path.Combine(Path.GetDirectoryName(_cacheFile) ?? "", "cardmarket_prices.js");
-            var compactList = cards
+            await File.WriteAllTextAsync(_cacheFile, JsonSerializer.Serialize(cards));
+            string outputDir = Path.GetDirectoryName(_cacheFile) ?? dir;
+            string jsFile = Path.Combine(outputDir, "cardmarket_prices.js");
+            IEnumerable<object[]> compactList = cards
                 .Where(c => !string.IsNullOrWhiteSpace(c.Name) && c.Price.HasValue && c.Price.Value > 0)
                 .Select(c => new object[] { c.Name, c.Price!.Value });
             string timestamp = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
@@ -107,7 +118,20 @@ namespace CardCrawler.Cardmarket
             {
                 timestamp = parsedDate.ToString("dd.MM.yyyy HH:mm");
             }
-            string jsContent = $"window.CARDMARKET_UPDATED_AT=\"{timestamp}\";\nwindow.CARDMARKET_PRICES=" + System.Text.Json.JsonSerializer.Serialize(compactList) + ";";
+
+            Console.WriteLine("Fetching current Commander banlist...");
+            List<string> bannedCards = await CommanderBanlistService.FetchBannedCardsAsync(dir);
+            string banlistBlock = "";
+            if (bannedCards.Count > 0) {
+                await CommanderBanlistService.SaveBanlistJsonAsync(outputDir, bannedCards);
+                string banlistTimestamp = DateTime.Now.ToString("dd.MM.yyyy HH:mm");
+                banlistBlock = $"window.COMMANDER_BANLIST_UPDATED_AT=\"{banlistTimestamp}\";\nwindow.COMMANDER_BANLIST={JsonSerializer.Serialize(bannedCards)};\n";
+                Console.WriteLine($"Included {bannedCards.Count} banned Commander cards.");
+            } else {
+                Console.WriteLine("Warning: No Commander banlist could be fetched; index.html will use its built-in fallback.");
+            }
+
+            string jsContent = $"window.CARDMARKET_UPDATED_AT=\"{timestamp}\";\n{banlistBlock}window.CARDMARKET_PRICES=" + JsonSerializer.Serialize(compactList) + ";";
             await File.WriteAllTextAsync(jsFile, jsContent);
             Console.WriteLine($"Merged {cards.Count} cards to {_cacheFile} and compact cardmarket_prices.js (Timestamp: {timestamp})");
         }
